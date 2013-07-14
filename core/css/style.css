@@ -1,0 +1,18 @@
+body{
+	background: #0F0A00;
+}
+
+#world_container{
+	position:relative;
+	width:400px;
+}
+
+.wrapper{
+	position:relative;
+}
+
+
+#debug_canvas{
+	border:1px #333 solid;
+	background-color:#111;
+}
