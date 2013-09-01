@@ -95,14 +95,14 @@ Block = Entity.extend({
 		this._super();
 		if(this.render==null) return;
 		var pos = {x: this.pos.x*64, y: this.pos.y*64}
-		var radius = 64*4;
+		var radius = 350;
 		var distance = Math.abs(lineDistance(pos,game_engine.player.pos));
 		var distance = (distance-64)/radius; if(distance<0) distance=0;
 		this.render.setOpacity(0);
-		var block = this.render.getChildren()[0];
+		//var block = this.render.getChildren()[0];
 		if(distance<1){
 			var opacity = 1-((distance*100)/100);
-			if(opacity>0.55){opacity/=0.7;}
+			if(opacity>0.55){opacity/=.7;}
 			this.render.setOpacity(opacity);
 		}
 	}
@@ -124,7 +124,7 @@ Dirt = Block.extend({
 });
 
 Stone = Block.extend({
-	color: '#888',
+	color: '#888888',
 	init: function(inputx, inputy, settings) {
 		this._super(inputx, inputy, settings);
 	},

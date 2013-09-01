@@ -33,7 +33,6 @@ Player = Entity.extend({
 			x: (position.x*player_size)+2,
 			y: (position.y*player_size)+2
 		}
-		render.setX(this.pos.x);
-		render.setY(this.pos.y);
+		render.setPosition(this.pos);
 	}
 });

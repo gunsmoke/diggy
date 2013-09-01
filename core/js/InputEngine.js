@@ -25,7 +25,7 @@ InputEngine = Class.extend({
 			}
 		}
 	},
-	onKeyUpEvent: function (keyCode) {
+	onKeyUpEvent: function (keyCode, event) {
 
 		var code = keyCode;
 

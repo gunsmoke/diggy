@@ -1,14 +1,25 @@
 Math.seedrandom("cool seed");
 var simple_noise = new SimplexNoise();
+var stats = new Stats();
+stats.setMode( );
+stats.domElement.style.position = 'absolute';
+stats.domElement.style.right = '0px';
+stats.domElement.style.bottom = '0px';
+stats.domElement.style.zIndex = '1444';
+document.body.appendChild( stats.domElement );
+
+
 
 function init(){
 
-	
 	game_engine.setup(true); // activate with debug mode on
 
 	(function gameloop(){
 		requestAnimFrame(gameloop);
+
+		stats.begin();
 		game_engine.run();
+		stats.end();
 		
 	})();
 

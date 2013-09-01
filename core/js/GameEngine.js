@@ -2,7 +2,7 @@ GameEngine = Class.extend({
 	entities: [],
 	player: null,
 	init: function () {},
-	setup: function (debug) {
+	setup: function () {
 		// setup
 		world_engine.setup({
 			offset: {x:0, y:0}
@@ -15,10 +15,10 @@ GameEngine = Class.extend({
 		// register contact listeners
 		this.contactListeners();
 		// Debug Mode
-		if(debug===true){
+		if(Config.DEBUG){
 			physics_engine.debug(document.getElementById("debug_canvas").getContext("2d"),2);
 		}
-	
+		
 		this.player = new Player();
 
 		world_engine.follow(this.player);
@@ -45,7 +45,9 @@ GameEngine = Class.extend({
 		physics_engine.build();
 		world_engine.build();
 		render_engine.build();
-		light_engine.build();
+		if(Config.LIGHTS){
+			light_engine.build();
+		}
 	},
 	run: function() {
 		this.handleUserInteractions();
@@ -89,7 +91,10 @@ GameEngine = Class.extend({
 		this.player.update();
 		physics_engine.update();
 		world_engine.update();
-		light_engine.update();
+		if(Config.LIGHTS){
+			light_engine.update();
+		}
+		
 		render_engine.update();
 		input_engine.update();
 	},

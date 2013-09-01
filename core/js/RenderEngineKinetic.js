@@ -1,7 +1,35 @@
+LightRender = Class.extend({
+    poly: null,
+    body: null,
+    radius: null,
+    shineLight: true,
+	init: function(entityDef){
+		this.radius = entityDef.radius;
+        this.body = new Kinetic.Group({x:0,y:0});
+	    this.poly = new Kinetic.Polygon({
+            points: [0,0],
+            fillRadialGradientStartPoint: 0,
+            fillRadialGradientStartRadius: 0,
+            fillRadialGradientEndPoint: 0,
+            fillRadialGradientEndRadius: this.radius,
+            fillRadialGradientColorStops: [0, 'rgba(255,255,255,0.2)', 1, 'rgba(0,0,0,0)'],
+            strokeWidth: 0
+        });
+        this.body.add(this.poly);
+	},
+	setPosition: function(pos){
+        this.poly.setFillRadialGradientStartPoint([pos.x,pos.y]);
+        this.poly.setFillRadialGradientEndPoint([pos.x,pos.y]);
+    },
+	setPoints: function(path){
+		this.poly.setPoints(path);
+	}
+});
+
 RenderEngine = Class.extend({
 	stage: null,
 	layers: new Object(),
-	stage_size: {width: 500, height:500, scale:1},
+	stage_size: {width: 500, height:500, scale:0.8},
 	init: function () {},
 	build: function() {
 		this.stage = new Kinetic.Stage({
@@ -24,8 +52,12 @@ RenderEngine = Class.extend({
 		this.stage.setHeight(height);
 	},
 	setScale: function(scale){
-		this.stage_size.width = scale;
+		this.stage_size.scale = scale;
 		this.stage.setScale(scale);
+	},
+	stagePosition: function(pos){
+		this.stage.setX(pos.x);
+		this.stage.setY(pos.y);
 	},
 	addLayer: function(name){
 		var layer = this.registerLayer(name, new Kinetic.Layer());
@@ -38,6 +70,12 @@ RenderEngine = Class.extend({
 	registerLayer: function(name,layer){
 		this.layers[name] = layer;
 		return layer;
+	},
+	addLight: function(entityDef){
+		var light_layer = this.getLayer("light");
+		var light = new LightRender(entityDef);
+		light_layer.add(light.body);
+		return light;
 	},
 	addPlayer: function(entityDef){
 		var player_layer = this.getLayer("player");

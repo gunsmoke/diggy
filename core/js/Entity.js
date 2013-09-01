@@ -1,6 +1,6 @@
 Entity = Class.extend({
 	id: 0,
-	pos: {x: 0,y: 0},
+	pos: {x: 0, y: 0},
 	zIndex: 0,
 	markForDeath:false,
 	dead: false,

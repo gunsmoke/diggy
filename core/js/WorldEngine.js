@@ -5,7 +5,12 @@ WorldData = Class.extend({
 
 	},
 	get: function(x,y){
-		return this.data[y][x];
+		if(this.data[y]!==undefined){
+			if(this.data[y][x]!==undefined){
+				return this.data[y][x];
+			}
+		}
+		return null;
 	},
 	set: function(x,y,value){
 		if(this.data[y]===undefined){this.data[y]=new Array();}
@@ -140,7 +145,9 @@ WorldEngine = Class.extend({
 	},
 	loadBlocks: function(blocks){
 		for (var i = 0; i < blocks.length; i++) {
-			var block_data = world_data.data[blocks[i].y][blocks[i].x];
+			var block_data = world_data.get(blocks[i].x,blocks[i].y);
+			if(block_data===null){return;}
+			//var block_data = world_data.data[blocks[i].y][blocks[i].x];
 			if(block_data>0 && this.isBlockActive(blocks[i])===false){
 
 				// TODO: make a factory to spawn this crap
@@ -200,7 +207,7 @@ WorldEngine = Class.extend({
 	},
 	getVisibleBlocks: function(x,y){
 		var blocks = new Array();
-		var distance = 5;
+		var distance = Config.DRAW_DISTANCE;
 		var max_x = Config.MAX_CHUNKS_SIZE.X * Config.CHUNK_SIZE;
 		var max_y = Config.MAX_CHUNKS_SIZE.Y * Config.CHUNK_SIZE;
 		for (var i = x-distance; i < x+distance; i++) {
@@ -324,16 +331,9 @@ WorldEngine = Class.extend({
 	},
 	centerWorldToEntity: function(entity){
 		if(entity==null) return;
-		var stage = render_engine.stage;
 		var position = this.getCenterXY(entity);
-		stage.setX(position.x);
-		stage.setY(position.y);
+		render_engine.stagePosition(position);
 	}
 });
 
 world_engine = new WorldEngine();
-
-
-
-//CREATE A SINGLE MATRIX FOR THE DATA MAP
-//RENDER BLOCKS WITHIN A RADIOUS of the PLAYTER
