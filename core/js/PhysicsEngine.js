@@ -10,15 +10,18 @@ var b2Vec2 = Box2D.Common.Math.b2Vec2,
 	b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape,
 	b2CircleShape = Box2D.Collision.Shapes.b2CircleShape,
 	b2DebugDraw = Box2D.Dynamics.b2DebugDraw,
-	b2MouseJointDef =  Box2D.Dynamics.Joints.b2MouseJointDef;
+	b2MouseJointDef =  Box2D.Dynamics.Joints.b2MouseJointDef,
+    b2RayCastInput = Box2D.Collision.b2RayCastInput,
+    b2RayCastOutput = Box2D.Collision.b2RayCastOutput;
 
 // THE MAIN GAME ENGINE
 PhysicsEngine = Class.extend({
 	PHYSICS_FRAME_RATE: 1.0 / 60.0,
-	PHYSICS_VELOCITY_ITERATIONS: 10,
-	PHYSICS_POSITION_ITERATIONS: 10,
+	PHYSICS_VELOCITY_ITERATIONS: 2,
+	PHYSICS_POSITION_ITERATIONS: 5,
 	debug: false,
 	world: null,
+	debugDraw: new b2DebugDraw(),
 	init: function(){
 		this.x_offset = 0;
 		this.y_offset = 0;
@@ -40,6 +43,10 @@ PhysicsEngine = Class.extend({
 		}
 
 		this.world.ClearForces();
+
+		if(Config.LIGHTS){
+			light_engine.update();
+		}
 	},
 	addContactListener: function (callbacks) {
 		var listener = new Box2D.Dynamics.b2ContactListener();
@@ -87,6 +94,16 @@ PhysicsEngine = Class.extend({
         	fixDef.shape = new b2PolygonShape;
       		fixDef.shape.SetAsBox(entityDef.width, entityDef.height);
         }
+		
+		// set density and frition
+		if (entityDef.type == 'static') {
+			fixDef.density = 2; 
+			fixDef.friction = 1;
+		} else {
+			fixDef.density = 2; 
+			fixDef.friction = 0.5;
+		}
+
 		// Append the Fixture to the body
 		body.CreateFixture(fixDef);
 		return body;
@@ -106,13 +123,13 @@ PhysicsEngine = Class.extend({
     },
     debug: function(element,scale){
 		//setup debug draw
-		var debugDraw = new b2DebugDraw();
-		debugDraw.SetSprite(element);
-		debugDraw.SetDrawScale(scale);
-		debugDraw.SetFillAlpha(0.1);
-		debugDraw.SetLineThickness(0.1);
-		debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
-		this.world.SetDebugDraw(debugDraw);
+		
+		this.debugDraw.SetSprite(element);
+		this.debugDraw.SetDrawScale(scale);
+		this.debugDraw.SetFillAlpha(0.1);
+		this.debugDraw.SetLineThickness(0.1);
+		this.debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
+		this.world.SetDebugDraw(this.debugDraw);
 		this.debug = true;
     }
 });

@@ -16,6 +16,17 @@ Entity = Class.extend({
 			return;
 		}
 	},
+	getPosition: function(){
+		return {x: this.pos.x*64, y: this.pos.y*64}
+	},
+	enablePhysics: function(){
+		if(this.physBody==null) return;
+		this.physBody.SetAwake(true);
+	},
+	disablePhysics: function(){
+		if(this.physBody==null) return;
+		this.physBody.SetAwake(false);
+	},
 	onTouch: function(body, impulse) {}
 });
 

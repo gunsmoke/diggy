@@ -3,7 +3,7 @@
  * MIT Licensed.
  */
 // Inspired by base2 and Prototype
-function lineDistance(point1, point2){
+var lineDistance =function(point1, point2){
 	var xs = 0;
 	var ys = 0;
 	xs = point2.x - point1.x;
@@ -11,7 +11,11 @@ function lineDistance(point1, point2){
 	ys = point2.y - point1.y;
 	ys = ys * ys;
 	return Math.sqrt( xs + ys );
-}
+};
+
+var ratioDistance = function( x, y, ratio ) {
+  return Math.sqrt((Math.pow(y * ratio, 2)) + Math.pow(x, 2));
+};
 
 (function(){
   var initializing = false, fnTest = /xyz/.test(function(){xyz;}) ? /\b_super\b/ : /.*/;

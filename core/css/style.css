@@ -11,6 +11,19 @@ body{
 	position:relative;
 }
 
+#debug_monitor{
+	position:fixed;
+	top:25px;
+	right:25px;
+	z-index:100000;
+	padding-top:0px;
+}
+#debug_monitor h2{
+	line-height:30px;
+	font-size:1.2em;
+	color:#000;
+	text-align: center;
+}
 
 #debug_canvas{
 	border:1px #333 solid;
