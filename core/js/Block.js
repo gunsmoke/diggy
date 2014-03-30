@@ -51,9 +51,9 @@ Block = Entity.extend({
 	zIndex: 0,
 	parentChunk: null,
 	dataIndex: null,
-	highlight: false,
 	debryAmount:2.7,
 	color: '#574F3F',
+	asset: null,
 	init: function(inputx, inputy, settings) {
 		this._super(inputx, inputy, settings);
 		this.pos = {x:inputx, y:inputy};
@@ -66,6 +66,8 @@ Block = Entity.extend({
 			type: "static",
 			width: 0.5,
 			height: 0.5,
+			asset: this.asset,
+			color: this.color,
 			userData: {
 				"id": "block",
 				"ent": this
@@ -76,24 +78,36 @@ Block = Entity.extend({
 		var u = body?body.GetUserData():null;
 		
 		if(impulse>0.35 && u!==null){
-			this.highlight = true;
 			if(u.id=="player" && u.ent.isDigging()){
-				this.takeDamage();
-				if(this.health<=0){
-					this.markForDeath = true;
-				}
+				this.doDamage();
 			}
 		}
 	},
-	takeDamage: function(){
-		this.health-=5;
+	doDamage: function(amount){
+		if(this.health<=0){
+			this.markForDeath = true;
+		}
+		this.takeDamage(amount);
+	},
+	takeDamage: function(amount){
+		if(amount===undefined){amount=0.8;}
+		this.health-=amount;
+		this.setDamage();
+	},
+	setDamage: function(){
+		var delta = (this.health/this.maxHealth);
+		delta = 1-((delta*100)/100);
+		if(delta>0.1){
+			this.render.setDamageStage(Math.floor(delta*9));
+		}
 	},
 	remove: function(){
 		world_engine.removeBlock(this.pos);
 	},
 	enable: function(){
-		this.render = render_engine.addBlock(this.getEntityDef(), this.color);
+		this.render = render_engine.addBlock(this.getEntityDef());
 		this.physBody = physics_engine.addBody(this.getEntityDef());
+		this.setDamage();
 	},
 	disable: function(){
 		// remove physics body
@@ -111,7 +125,7 @@ Block = Entity.extend({
 			for (var x = -size; x < size; x++) {
 				var offset_x = x*0.1;
 				var offset_y = y*-0.1;
-				world_engine.addDebry(new Debry(this.pos.x+offset_x, this.pos.y+offset_y, this.color));
+				world_engine.addDebry(new Debry(this.pos.x+offset_x, this.pos.y+offset_y, this));
 			}
 		};
 	},
@@ -127,31 +141,36 @@ Block = Entity.extend({
 		this._super();
 		if(this.render==null) return;
 
-		if(this.highlight){
-			//this.render.graphics.tint = 0x999999;
-		} else {
-			//this.render.graphics.tint = 0xFFFFFF;
-		}
-
 		var distance = game_engine.getPlayerDistance(this.getPosition(),Config.DRAW_DISTANCE*19.5);
 
 		if(distance<1){
 			var opacity = 1-((distance*100)/100);
-			if(opacity>0.55){opacity/=.7;}
+			if(opacity>0.5){opacity/=.8;}
 			this.render.setOpacity(opacity);
 			this.enablePhysics();
 		} else {
 			this.render.setOpacity(0);
 			this.disablePhysics();
 		}
-
-		this.highlight = false;
 	}
+});
+
+BedRock = Block.extend({
+	type: 0,
+	color: '#222223',
+	asset: 'bedrock',
+	init: function(inputx, inputy, settings) {
+		this._super(inputx, inputy, settings);
+	},
+	onTouch: function(){},
+	takeDamage: function(){},
+	kill: function(){}
 });
 
 Grass = Block.extend({
 	type: 1,
 	color: '#00ff00',
+	asset: 'grass_side',
 	init: function(inputx, inputy, settings) {
 		this._super(inputx, inputy, settings);
 	},
@@ -160,6 +179,7 @@ Grass = Block.extend({
 Dirt = Block.extend({
 	type: 2,
 	color: '#784800',
+	asset: 'dirt',
 	init: function(inputx, inputy, settings) {
 		this._super(inputx, inputy, settings);
 	},
@@ -168,6 +188,9 @@ Dirt = Block.extend({
 Stone = Block.extend({
 	type: 3,
 	color: '#888888',
+	asset: 'stone',
+	health: 200,
+	maxHealth: 200,
 	init: function(inputx, inputy, settings) {
 		this._super(inputx, inputy, settings);
 	},
@@ -187,7 +210,7 @@ GravityBlock = Block.extend({
 		if(world_data.get(this.pos.x,this.pos.y+1)===null){return;}
 		if(world_data.get(this.pos.x,this.pos.y+1).type==0){
 			if(this.decayClock<=0){
-				this.markForDeath = true;
+				this.doDamage(1);
 			} else {
 				this.decayClock--;
 			}
@@ -201,6 +224,7 @@ Sand = GravityBlock.extend({
 	type: 4,
 	color: '#ECDCAB',
 	debryAmount:1.7,
+	asset: 'sand',
 	init: function(inputx, inputy, settings) {
 		this._super(inputx, inputy, settings);
 	},
@@ -210,6 +234,7 @@ Gravel = GravityBlock.extend({
 	type: 5,
 	color: '#5E5748',
 	debryAmount:1.2,
+	asset: 'gravel',
 	init: function(inputx, inputy, settings) {
 		this._super(inputx, inputy, settings);
 	},
@@ -229,6 +254,7 @@ FluidBlock = Entity.extend({
 	direction: null,
 	isSource: true,
 	hasSource: null,
+	asset: null,
 	init: function(inputx, inputy, settings) {
 		this._super(inputx, inputy, settings);
 		this.pos = {x:inputx, y:inputy};
@@ -246,6 +272,7 @@ FluidBlock = Entity.extend({
 			x: this.pos.x,
 			y: this.pos.y,
 			type: "static",
+			asset: this.asset,
 			width: 0.5,
 			height: 0.5,
 			userData: {
@@ -489,17 +516,20 @@ FluidBlock = Entity.extend({
 		var distance = game_engine.getPlayerDistance(this.getPosition(),Config.DRAW_DISTANCE*19.5);
 		if(distance<1){
 			var opacity = 1-((distance*100)/100);
-			if(opacity>0.85){opacity=0.85;}
+			if(opacity>0.8){opacity=0.8;}
 			this.render.setOpacity(opacity);
 		} else {
 			this.render.setOpacity(0);
 		}
+
+		this.render.sprite.tilePosition.y += 0.2;
 	}
 });
 
 Water = FluidBlock.extend({
 	type: 6,
 	color: '#B0D2FF',
+	asset: 'water',
 	init: function(inputx, inputy, settings) {
 		this._super(inputx, inputy, settings);
 	},
@@ -509,6 +539,7 @@ Lava = FluidBlock.extend({
 	type: 7,
 	clockSpeed:10,
 	color: '#FF9245',
+	asset: 'lava',
 	init: function(inputx, inputy, settings) {
 		this._super(inputx, inputy, settings);
 	},

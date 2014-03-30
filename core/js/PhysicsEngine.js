@@ -17,8 +17,8 @@ var b2Vec2 = Box2D.Common.Math.b2Vec2,
 // THE MAIN GAME ENGINE
 PhysicsEngine = Class.extend({
 	PHYSICS_FRAME_RATE: 1.0 / 60.0,
-	PHYSICS_VELOCITY_ITERATIONS: 2,
-	PHYSICS_POSITION_ITERATIONS: 5,
+	PHYSICS_VELOCITY_ITERATIONS: 1,
+	PHYSICS_POSITION_ITERATIONS: 1,
 	debug: false,
 	world: null,
 	debugDraw: new b2DebugDraw(),

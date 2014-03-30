@@ -25,8 +25,11 @@ WorldData = Class.extend({
 		if(y<9) return [1];
 		if(y<30) return [2,2,2,2,2,4,5];
 		if(y<80) return [2,2,3,3,3,4,5,6];
-		if(y<300) return [9999,2,3,3,3,3,3,3,3,3,3,6];
-		return [9999,3,3,3,3,3,3,3,3,3,3,3,4,5,5,5,5,5,5,5,5,7];
+		if(y<300) return [0,0,0,0,0,2,3,3,3,3,3,3,3,3,3,6];
+		if(y<1200) [0,0,0,0,0,3,3,3,3,3,3,3,3,3,3,3,5,5,5,5,5,6,6,6,6,7];
+		if(y<2200) [0,0,0,0,0,3,3,3,3,3,3,3,3,3,3,3,5,5,5,5,5,7];
+		if(y<3200) [0,0,0,0,0,3,3,3,3,3,3,3,5,5,5,6];
+		return [0,0,0,0,0,0,0,0,0,0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,7,7,7];
 	},
 	getNoiseThreshold: function(y){
 		if(y<25) return 1;
@@ -34,11 +37,15 @@ WorldData = Class.extend({
 		if(y<100) return 0.2;
 		if(y<500) return 0;
 		if(y<800) return 0.9;
+		if(y<1200) return 0.4;
 		return 0;
 	},
 	entityFactory: function(x,y,block_data){
 		var block = null;
 		switch(block_data){
+			case 0:
+				block = new Void(x,y);
+				break;
 			case 1:
 				block = new Grass(x,y);
 				break;
@@ -60,6 +67,9 @@ WorldData = Class.extend({
 			case 7:
 				block = new Lava(x,y);
 				break;
+			case 8:
+				block = new BedRock(x,y);
+				break;
 			default:
 				block = new Void(x,y);
 		}
@@ -80,6 +90,8 @@ WorldChunk = Class.extend({
 	index_offset_y: 0,
 	entities: [],
 	clock: 100,
+	randomizer: 1,
+	RDM: Math.random,
 	init: function(index,add_noise){
 		this.index = index;
 		if(add_noise===undefined){add_noise = true;}
@@ -90,6 +102,11 @@ WorldChunk = Class.extend({
 		this.index_offset_y = this.getYindex()*Config.CHUNK_SIZE;
 
 		if(Config.DEBUG) this.debug_render();
+
+		Math.seedrandom(Config.SEED+"_"+this.index_offset_x+"_"+this.index_offset_y);
+		this.RDM = Math.random;
+
+		this.randomizer = this.RDM();
 
 		this.setup();
 	},
@@ -111,21 +128,31 @@ WorldChunk = Class.extend({
 		debug_layer.add(this);
 	},
 	setup: function(){
+		var simplex_noise = new SimplexNoise(this.RDM);
 		var size = Config.CHUNK_SIZE;
-		for (var i = 0; i < size; i++) {
-			for (var o = 0; o < size; o++) {
+		var bound_size = Math.ceil(Config.DRAW_DISTANCE/2)+1;
+		var max_y = Config.MAX_CHUNKS_SIZE.Y*size-bound_size;
+		var max_x = Config.MAX_CHUNKS_SIZE.X*size-bound_size;
+		var min_x = bound_size;
+
+		for (var y = this.index_offset_y; y < (size + this.index_offset_y); y++) {
+			for (var x = this.index_offset_x; x < (size + this.index_offset_x); x++) {
 				var allowed_blocks = world_data.getBlockThreshold(y);
-				var block = allowed_blocks[Math.ceil(Math.random()*allowed_blocks.length-1)];
-				var x = o+this.index_offset_x;
-				var y = i+this.index_offset_y;
+				var noise_block = allowed_blocks[Math.ceil(this.randomizer*allowed_blocks.length-1)];
+				var block = allowed_blocks[Math.ceil(this.RDM()*allowed_blocks.length-1)];
 				if(this.noise===true){
-					var noise = simple_noise.noise(x,y);
+					var noise = simplex_noise.noise(x,y);
 					var noise_treshold = world_data.getNoiseThreshold(y);
 					if(noise>=noise_treshold){
-						block = 0;
+						block = noise_block;
 					}
 				}
 				if(y<8){block=0;}
+				
+				// create bounds
+				if(y>max_y){block=8;} // floor
+				if(x<min_x){block=8;} // left
+				if(x>max_x){block=8;} // right
 
 				world_data.set(x,y,block);
 			}
@@ -134,10 +161,8 @@ WorldChunk = Class.extend({
 	update: function(){
 		var size = Config.CHUNK_SIZE;
 		if(this.clock<=0){
-			for (var i = 0; i < size; i++) {
-				for (var o = 0; o < size; o++) {
-					var x = o+this.index_offset_x;
-					var y = i+this.index_offset_y;
+			for (var y = this.index_offset_y; y < (size + this.index_offset_y); y++) {
+				for (var x = this.index_offset_x; x < (size + this.index_offset_x); x++) {
 					var block = world_data.get(x,y);
 					if(block===null) continue;
 					if(block.type==0) continue;
@@ -145,9 +170,9 @@ WorldChunk = Class.extend({
 					if(block.type >= 6 && block.type <= 7) block.fluid_update();
 				}
 			};
-			this.clock = 100;
+			this.clock=100;
 		} else {
-			this.clock-=100;
+			this.clock-=32;
 		}
 	}
 });

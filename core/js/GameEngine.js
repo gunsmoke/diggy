@@ -18,14 +18,30 @@ GameEngine = Class.extend({
 		if(Config.DEBUG){
 			physics_engine.debug(document.getElementById("debug_canvas").getContext("2d"),12);
 		}
+
+		var total_possible_blocks = (Config.MAX_CHUNKS_SIZE.X*Config.CHUNK_SIZE) * (Config.MAX_CHUNKS_SIZE.Y*Config.CHUNK_SIZE);
+		$(".mpb").text(total_possible_blocks);
 		
-		this.player = new Player();
+		this.player = new Player(19.5,6);
 
 		world_engine.follow(this.player);
 
 		// INPUTS
 		window.addEventListener('keydown', this.keydown, false);
     	window.addEventListener('keyup', this.keyup, false);
+
+    	$(window).on("mousewheel DOMMouseScroll", function(event){
+			event.preventDefault();	
+			var delta = event.originalEvent.wheelDelta/120 || -event.originalEvent.detail/3;
+
+			var current_scale = render_engine.stage_size.scale;
+			if(delta>0){
+				current_scale+=0.01;
+			} else {
+				current_scale-=0.01;
+			}
+			render_engine.setScale(current_scale);
+		});
 	},
 	bindings: function() {
 		input_engine.bind(input_engine.KEYS.W, 'move-up');
@@ -44,8 +60,8 @@ GameEngine = Class.extend({
 	},
 	build: function() {
 		physics_engine.build();
-		world_engine.build();
 		render_engine.build();
+		world_engine.build();
 		if(Config.LIGHTS){
 			light_engine.build();
 		}
@@ -101,7 +117,7 @@ GameEngine = Class.extend({
 	debug_monitor: function() {
 
 		var depth = this.get_player_depth();
-
+		/*
 		if(depth>50){
 			Config.DRAW_DISTANCE = 13;
 		} else if(depth>250){
@@ -109,7 +125,7 @@ GameEngine = Class.extend({
 		} else {
 			Config.DRAW_DISTANCE = 17;
 		}
-
+		*/
 		if(depth/1000>1){
 			depth = (depth/1000).toFixed(2) + "km";
 		} else {

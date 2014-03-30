@@ -1,5 +1,4 @@
-Math.seedrandom("cool seed");
-var simple_noise = new SimplexNoise();
+
 var stats = new Stats();
 stats.setMode( );
 stats.domElement.style.position = 'absolute';
@@ -12,7 +11,7 @@ document.body.appendChild( stats.domElement );
 
 function init(){
 
-	game_engine.setup(true); // activate with debug mode on
+	game_engine.setup(); // activate with debug mode on
 
 	(function gameloop(){
 		requestAnimFrame(gameloop);

@@ -2,10 +2,19 @@ PlayerRender = Class.extend({
 	graphics: null,
 	player_size: 28,
 	init: function(entityDef){
-		this.graphics = new PIXI.Graphics();
-		this.graphics.beginFill(0xC9C0B1);
-		this.graphics.lineStyle(2, 0x000000);
-		this.graphics.drawCircle(0, 0, this.player_size);
+
+		var sprite = PIXI.Sprite.fromImage("assets/"+Config.TEXTURE_PACK+"/textures/blocks/pumpkin_face_off.png");
+		sprite.position.x = sprite.position.y = -30;
+		sprite.scale = new PIXI.Point(0.9,0.9);
+		this.graphics = new PIXI.DisplayObjectContainer();
+
+		var mask = new PIXI.Graphics();
+		mask.beginFill(0xC9C0B1);
+		mask.drawCircle(0, 0, this.player_size);
+		this.graphics.addChild(mask);
+		this.graphics.addChild(sprite);
+		//sprite.mask = mask;
+
 	},
 	setPosition: function(pos){
 		this.graphics.position = new PIXI.Point(pos.x,pos.y);
@@ -14,15 +23,25 @@ PlayerRender = Class.extend({
 
 DebryRender = Class.extend({
 	graphics: null,
-	init: function(entityDef, size, color){
-		this.graphics = new PIXI.Graphics();
-		var color = "0x"+color.substr(1);
-		//this.graphics.beginFill(color);
-		var alpha = Math.random();
-		if(alpha<0.5) alpha=0.5;
-		this.graphics.lineStyle(12, color, alpha);
-		this.graphics.drawCircle(0, 0, size);
-		//this.graphics.drawRect(0, 0, size, size);
+	init: function(entityDef){
+		//this.graphics = new PIXI.Graphics();
+		//var color = "0x"+color.substr(1);
+
+		var sprite = PIXI.Sprite.fromImage("assets/"+Config.TEXTURE_PACK+"/textures/blocks/"+entityDef.asset+".png");
+		sprite.position.x = sprite.position.y = -32;
+		sprite.rotation = Math.random()-0.5;
+
+		this.graphics = new PIXI.DisplayObjectContainer();
+
+		var mask = new PIXI.Graphics();
+		mask.beginFill(entityDef.color);
+		mask.drawCircle(0, 0, entityDef.radius*124.5);
+
+		this.graphics.addChild(mask);
+
+		this.graphics.addChild(sprite);
+		sprite.mask = mask;
+
 	},
 	setPosition: function(pos){
 		this.graphics.position = new PIXI.Point(pos.x,pos.y);
@@ -39,18 +58,52 @@ DebryRender = Class.extend({
 
 BlockRender = Class.extend({
 	graphics: null,
+	sprite: null,
+	damage_sprite: null,
 	block_size: 64,
-	init: function(entityDef, color){
-		this.graphics = new PIXI.Graphics();
+	init: function(entityDef){
+		this.graphics = new PIXI.DisplayObjectContainer();
+
+		var box = new PIXI.Graphics();
 		var offset = this.block_size/2;
-		var color = "0x"+color.substr(1);
+
+		if(entityDef.asset!=null){
+			this.sprite = PIXI.Sprite.fromImage("assets/"+Config.TEXTURE_PACK+"/textures/blocks/"+entityDef.asset+".png");
+			this.sprite.position.x = this.sprite.position.y = -32;
+		} else {
+			var color = "0x"+entityDef.color.substr(1);
+		}
+		//this.sprite = PIXI.Sprite.fromImage("assets/textures/blocks/"+entityDef.asset+".png");
+
+		//var texture = PIXI.Texture.fromImage("assets/textures/blocks/"+entityDef.asset+".png");
+		
+		//this.sprite = new PIXI.TilingSprite(texture, 64, 64);
+
+
 		this.setPosition({
 			x: entityDef.x*this.block_size,
 			y: entityDef.y*this.block_size
 		})
-		this.graphics.beginFill(color);
-		this.graphics.lineStyle(-1, color, 0.5);
-		this.graphics.drawRect(-offset, -offset, this.block_size, this.block_size);
+
+
+		if(entityDef.asset!=null){
+			this.graphics.addChild(this.sprite);
+		} else {
+			box.beginFill(color);
+			box.lineStyle(0, color, 0.5);
+			box.drawRect(-offset, -offset, this.block_size, this.block_size);
+			this.graphics.addChild(box);
+		}
+
+	},
+	setDamageStage: function(stage){
+		if(this.damage_sprite!=null){
+			this.graphics.removeChild(this.damage_sprite);
+		}
+		this.damage_sprite = PIXI.Sprite.fromImage("assets/"+Config.TEXTURE_PACK+"/textures/blocks/destroy_stage_"+stage+".png");
+		this.damage_sprite.position.x = this.damage_sprite.position.y = -32;
+		this.damage_sprite.blendMode = PIXI.blendModes.MULTIPLY;
+		this.graphics.addChild(this.damage_sprite);
 	},
 	setPosition: function(pos){
 		this.graphics.position = new PIXI.Point(pos.x,pos.y);
@@ -72,12 +125,31 @@ FluidRender = Class.extend({
 	init: function(entityDef, color){
 		this.graphics = new PIXI.Graphics();
 		var offset = this.block_size/2;
-		this.color = "0x"+color.substr(1);
+		//this.color = "0x"+color.substr(1);
+		
+		//this.setVolume(0);
+
+		if(entityDef.asset!=null){
+			var texture = PIXI.Texture.fromImage("assets/"+Config.TEXTURE_PACK+"/textures/blocks/"+entityDef.asset+".png");
+			this.sprite = new PIXI.TilingSprite(texture, 64, 64);
+			this.sprite.position.x = this.sprite.position.y = -32;
+		} else {
+			var color = "0x"+color.substr(1);
+		}
+
 		this.setPosition({
 			x: entityDef.x*this.block_size,
 			y: entityDef.y*this.block_size
-		})
-		this.setVolume(0);
+		});
+
+		if(entityDef.asset!=null){
+			this.graphics.addChild(this.sprite);
+		} else {
+			box.beginFill(color);
+			box.lineStyle(0, color, 0.5);
+			box.drawRect(-offset, -offset, this.block_size, this.block_size);
+			this.graphics.addChild(box);
+		}
 	},
 	setDirection: function(value){
 		if(value!=null && Config.DEBUG){
@@ -93,6 +165,7 @@ FluidRender = Class.extend({
 		}
 	},
 	setVolume: function(value){
+		return;
 		var level = (this.block_size*value/100);
 		if(value>0){ level = 64; }
 		this.graphics.clear();
@@ -180,7 +253,7 @@ RenderEngine = Class.extend({
 	stage: null,
 	layers: new Object(),
 	renderer: null,
-	stage_size: {width: 500, height:500, scale:0.8},
+	stage_size: {width: 500, height:500, scale:Config.SCALE},
 	init: function () {},
 	build: function() {
 		this.stage = new PIXI.Stage(0x0F0A00);
@@ -189,12 +262,12 @@ RenderEngine = Class.extend({
 		$("#world_container").append(this.renderer.view);
 
 		this.addLayer("debug");
-		this.addLayer("player");
 		this.addLayer("light");
+		this.addLayer("player");
 		this.addLayer("debry");
 		this.addLayer("blocks");
 
-		this.setScale(this.stage_size.scale);
+		this.applyScale();
 	},
 	setWidth: function(width){
 		this.stage_size.width = width;
@@ -205,7 +278,11 @@ RenderEngine = Class.extend({
 		this.renderer.resize(this.stage_size.width,height);
 	},
 	setScale: function(scale){
-		var scale = new PIXI.Point(scale,scale);
+		this.stage_size.scale = scale;
+		this.applyScale();
+	},
+	applyScale: function(){
+		var scale = new PIXI.Point(this.stage_size.scale,this.stage_size.scale);
 		for(var layer in this.layers){
 			var layer = this.getLayer(layer);
 			layer.container.scale = scale;
