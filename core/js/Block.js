@@ -156,7 +156,7 @@ Block = Entity.extend({
 });
 
 BedRock = Block.extend({
-	type: 0,
+	type: 8,
 	color: '#222223',
 	asset: 'bedrock',
 	init: function(inputx, inputy, settings) {
@@ -408,6 +408,10 @@ FluidBlock = Entity.extend({
 			}
 		}
 	},
+	spawnChild: function(parent_type){
+		this.markForDeath = true;
+		world_data.set(this.pos.x, this.pos.y, 3);
+	},
 	checkAdjacent: function(){
 		var right_bottom = world_data.getType(this.pos.x+1, this.pos.y+1);
 		var left_bottom = world_data.getType(this.pos.x-1, this.pos.y+1);
@@ -421,7 +425,13 @@ FluidBlock = Entity.extend({
 		} else if(left_bottom==this.type){
 			this.setDirection("left");
 		}
-
+		// check for lava
+		if(left==7 && this.type!=7){
+			this.spawnChild(left);
+		}
+		if(right==7 && this.type!=7){
+			this.spawnChild(right);
+		}
 
 	},
 	fluid_update: function(){
@@ -537,7 +547,7 @@ Water = FluidBlock.extend({
 
 Lava = FluidBlock.extend({
 	type: 7,
-	clockSpeed:10,
+	clockSpeed:20,
 	color: '#FF9245',
 	asset: 'lava',
 	init: function(inputx, inputy, settings) {

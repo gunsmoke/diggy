@@ -17,7 +17,11 @@ WorldData = Class.extend({
 	},
 	set: function(x,y,value){
 		if(this.data[y]===undefined){this.data[y]=new Array();}
-		delete this.data[y][x];
+		try
+		{
+			delete this.data[y][x];
+		}
+		catch(err){}
 		this.data[y][x] = this.entityFactory(x,y,value);
 		return this.data[y][x];
 	},
@@ -190,6 +194,11 @@ WorldEngine = Class.extend({
 	},
 	build: function() {
 		this.createBounds();
+
+		setTimeout(function(){
+			world_data.set(10,5,6);
+			world_data.set(19,5,7);
+		},100);
 	},
 	createBounds: function(){
 		var size_threshold = 1.5;
@@ -273,6 +282,7 @@ WorldEngine = Class.extend({
 				break;
 			}
 		};
+
 		// remove from world data
 		world_data.set(pos.x,pos.y, 0);
 	},
