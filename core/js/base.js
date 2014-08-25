@@ -2,8 +2,17 @@
  * By John Resig http://ejohn.org/
  * MIT Licensed.
  */
+
+var componentToHex = function(c) {
+  var hex = c.toString(16);
+  return hex.length == 1 ? "0" + hex : hex;
+}
+
+var rgbToHex = function(r, g, b) {
+  return componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
 // Inspired by base2 and Prototype
-var lineDistance =function(point1, point2){
+var lineDistance = function(point1, point2){
 	var xs = 0;
 	var ys = 0;
 	xs = point2.x - point1.x;
@@ -15,6 +24,11 @@ var lineDistance =function(point1, point2){
 
 var ratioDistance = function( x, y, ratio ) {
   return Math.sqrt((Math.pow(y * ratio, 2)) + Math.pow(x, 2));
+};
+
+function shuffle(o){ //v1.0
+    for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+    return o;
 };
 
 (function(){

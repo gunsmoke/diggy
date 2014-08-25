@@ -1,45 +1,14 @@
-Bound = Entity.extend({
-	physBody: null,
-	zIndex: 0,
-	init: function(inputx, inputy, width, height, settings) {
-		this._super(inputx, inputy, settings);
-		var entityDef = {
-			id: "bound",
-			x: this.pos.x,
-			y: this.pos.y,
-			type: "static",
-			width: width,
-			height: height,
-			userData: {
-				"id": "bound",
-				"ent": this
-			}
-		};
-
-		this.physBody = physics_engine.addBody(entityDef);
-	},
-	setX: function(x){
-		var pos = this.physBody.GetPosition();
-		var position = physics_engine.vec(x,pos.y);
-		this.physBody.SetPosition(position);
-	},
-	setY: function(y){
-		var pos = this.physBody.GetPosition();
-		var position = physics_engine.vec(pos.x,y);
-		this.physBody.SetPosition(position);
-	},
-	update: function(){
-		
-	}
-});
-
 Void = Entity.extend({
 	type: 0,
 	init: function(inputx, inputy, settings) {
 		this._super(inputx, inputy, settings);
 	},
 	enable: function(){},
+	enableRender: function(){},
+	enablePhysics: function(){},
 	disable: function(){},
+	disableRender: function(){},
+	disablePhysics: function(){},
 	update:function(){}
 });
 
@@ -52,7 +21,7 @@ Block = Entity.extend({
 	parentChunk: null,
 	dataIndex: null,
 	debryAmount:2.7,
-	color: '#574F3F',
+	color: null,
 	asset: null,
 	init: function(inputx, inputy, settings) {
 		this._super(inputx, inputy, settings);
@@ -79,11 +48,15 @@ Block = Entity.extend({
 		
 		if(impulse>0.35 && u!==null){
 			if(u.id=="player" && u.ent.isDigging()){
+				u.ent.diggAnim();
 				this.doDamage();
 			}
 		}
 	},
 	doDamage: function(amount){
+		var max_x = Config.MAX_CHUNKS_SIZE.X*Config.CHUNK_SIZE-Config.BOUND_SIZE;
+		var min_x = Config.BOUND_SIZE;
+		if(this.pos.x<min_x || this.pos.x>max_x){return false;}
 		if(this.health<=0){
 			this.markForDeath = true;
 		}
@@ -95,9 +68,11 @@ Block = Entity.extend({
 		this.setDamage();
 	},
 	setDamage: function(){
+		if(this.markForDeath){return false;}
 		var delta = (this.health/this.maxHealth);
 		delta = 1-((delta*100)/100);
-		if(delta>0.1){
+		if(delta>1){delta=1;}
+		if(delta>0.1 && this.render!==null){
 			this.render.setDamageStage(Math.floor(delta*9));
 		}
 	},
@@ -105,15 +80,29 @@ Block = Entity.extend({
 		world_engine.removeBlock(this.pos);
 	},
 	enable: function(){
-		this.render = render_engine.addBlock(this.getEntityDef());
-		this.physBody = physics_engine.addBody(this.getEntityDef());
+		this.enableRender();
+		this.enablePhysics();
 		this.setDamage();
 	},
 	disable: function(){
+		this.disablePhysics();
+		this.disableRender();
+	},
+	enablePhysics: function(){
+		if(this.physBody!=null) return;
+		this.physBody = physics_engine.addBody(this.getEntityDef());
+	},
+	disablePhysics: function(){
 		// remove physics body
 		if(this.physBody==null) return;
 		physics_engine.unregisterBody(this.physBody);
 		this.physBody = null;
+	},
+	enableRender: function(){
+		if(this.render!=null) return;
+		this.render = render_engine.addBlock(this.getEntityDef());
+	},
+	disableRender: function(){
 		// remove render object
 		if(this.render==null) return;
 		this.render.remove();
@@ -140,7 +129,7 @@ Block = Entity.extend({
 	update: function(){
 		this._super();
 		if(this.render==null) return;
-
+		/*
 		var distance = game_engine.getPlayerDistance(this.getPosition(),Config.DRAW_DISTANCE*19.5);
 
 		if(distance<1){
@@ -152,7 +141,19 @@ Block = Entity.extend({
 			this.render.setOpacity(0);
 			this.disablePhysics();
 		}
+		*/
 	}
+});
+
+Bound = Block.extend({
+	type: -1,
+	init: function(inputx, inputy, settings) {
+		this._super(inputx, inputy, settings);
+	},
+	onTouch: function(){},
+	takeDamage: function(){},
+	createDebry: function(){},
+	kill: function(){}
 });
 
 BedRock = Block.extend({
@@ -285,9 +286,15 @@ FluidBlock = Entity.extend({
 		world_engine.removeBlock(this.pos);
 	},
 	enable: function(){
+		this.enableRender();
+	},
+	enableRender: function(){
 		this.render = render_engine.addFluid(this.getEntityDef(), this.color);
 	},
 	disable: function(){
+		this.disableRender();
+	},
+	disableRender: function(){
 		// remove render object
 		if(this.render==null) return;
 		this.render.remove();
@@ -409,6 +416,7 @@ FluidBlock = Entity.extend({
 		}
 	},
 	spawnChild: function(parent_type){
+		world_engine.removeVisibleBlock(this.pos);
 		this.markForDeath = true;
 		world_data.set(this.pos.x, this.pos.y, 3);
 	},

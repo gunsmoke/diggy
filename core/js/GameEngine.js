@@ -1,6 +1,7 @@
 GameEngine = Class.extend({
 	entities: [],
 	player: null,
+	tick: 0,
 	init: function () {},
 	setup: function () {
 		// setup
@@ -22,7 +23,7 @@ GameEngine = Class.extend({
 		var total_possible_blocks = (Config.MAX_CHUNKS_SIZE.X*Config.CHUNK_SIZE) * (Config.MAX_CHUNKS_SIZE.Y*Config.CHUNK_SIZE);
 		$(".mpb").text(total_possible_blocks);
 		
-		this.player = new Player(19.5,6);
+		this.player = new Player(Config.MAX_CHUNKS_SIZE.X*Config.CHUNK_SIZE/2,6);
 
 		world_engine.follow(this.player);
 
@@ -44,10 +45,17 @@ GameEngine = Class.extend({
 		});
 	},
 	bindings: function() {
+		// MOVEMENT WASD
 		input_engine.bind(input_engine.KEYS.W, 'move-up');
 		input_engine.bind(input_engine.KEYS.S, 'move-down');
 		input_engine.bind(input_engine.KEYS.A, 'move-left');
 		input_engine.bind(input_engine.KEYS.D, 'move-right');
+		// MOVMENT ARROWS
+		input_engine.bind(input_engine.KEYS.UP_ARROW, 'move-up');
+		input_engine.bind(input_engine.KEYS.DOWN_ARROW, 'move-down');
+		input_engine.bind(input_engine.KEYS.LEFT_ARROW, 'move-left');
+		input_engine.bind(input_engine.KEYS.RIGHT_ARROW, 'move-right');
+
 		input_engine.bind(input_engine.KEYS.SPACE, 'digg');
 	},
 	contactListeners: function() {
@@ -61,6 +69,7 @@ GameEngine = Class.extend({
 	build: function() {
 		physics_engine.build();
 		render_engine.build();
+		particle_engine.build();
 		world_engine.build();
 		if(Config.LIGHTS){
 			light_engine.build();
@@ -96,7 +105,8 @@ GameEngine = Class.extend({
 		var vel = this.player.physBody.GetLinearVelocity();
 		// up/down arrow
 		if (input_engine.state('move-up')){
-			vel.y-=speed*0.8;
+			vel.y-=speed*0.7;
+			this.player.trustAnim();
 		}
 		if (input_engine.state('move-down')){
 			vel.y+=speed;	
@@ -107,6 +117,15 @@ GameEngine = Class.extend({
 		}
 		if (input_engine.state('move-right')){
 			vel.x+=speed;
+		}
+
+		var limit_speed = 5;
+		// limit
+		if(vel.x > limit_speed){
+			vel.x = limit_speed;
+		}
+		if(vel.x < -limit_speed){
+			vel.x = -limit_speed;
 		}
 	},
 	get_player_depth: function(){
@@ -137,16 +156,13 @@ GameEngine = Class.extend({
 	update: function () {
 		this.player.update();
 		physics_engine.update();
-		world_engine.update();
-		if(Config.LIGHTS){
-			//light_engine.update();
-		}
-		
+		world_engine.update();	
 		render_engine.update();
+		particle_engine.update();	
 		input_engine.update();
 
-
 		this.debug_monitor();
+		this.tick++;
 	},
 	keydown: function (event) {
 		if (event.target.type == 'text') {return;}

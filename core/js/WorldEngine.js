@@ -26,7 +26,7 @@ WorldData = Class.extend({
 		return this.data[y][x];
 	},
 	getBlockThreshold: function(y){
-		if(y<9) return [1];
+		if(y<14) return [1];
 		if(y<30) return [2,2,2,2,2,4,5];
 		if(y<80) return [2,2,3,3,3,4,5,6];
 		if(y<300) return [0,0,0,0,0,2,3,3,3,3,3,3,3,3,3,6];
@@ -34,6 +34,13 @@ WorldData = Class.extend({
 		if(y<2200) [0,0,0,0,0,3,3,3,3,3,3,3,3,3,3,3,5,5,5,5,5,7];
 		if(y<3200) [0,0,0,0,0,3,3,3,3,3,3,3,5,5,5,6];
 		return [0,0,0,0,0,0,0,0,0,0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,7,7,7];
+	},
+	getSecureBlocks: function(y){
+		var result = this.getBlockThreshold(y);
+		result = $.grep(result, function(value) {
+			return value != 0 && !(value==6 || value==7);
+		});
+		return result;
 	},
 	getNoiseThreshold: function(y){
 		if(y<25) return 1;
@@ -47,6 +54,9 @@ WorldData = Class.extend({
 	entityFactory: function(x,y,block_data){
 		var block = null;
 		switch(block_data){
+			case -1:
+				block = new Bound(x,y);
+				break;
 			case 0:
 				block = new Void(x,y);
 				break;
@@ -134,10 +144,9 @@ WorldChunk = Class.extend({
 	setup: function(){
 		var simplex_noise = new SimplexNoise(this.RDM);
 		var size = Config.CHUNK_SIZE;
-		var bound_size = Math.ceil(Config.DRAW_DISTANCE/2)+1;
-		var max_y = Config.MAX_CHUNKS_SIZE.Y*size-bound_size;
-		var max_x = Config.MAX_CHUNKS_SIZE.X*size-bound_size;
-		var min_x = bound_size;
+		var max_y = Config.MAX_CHUNKS_SIZE.Y*Config.CHUNK_SIZE-Config.BOUND_SIZE;
+		var max_x = Config.MAX_CHUNKS_SIZE.X*Config.CHUNK_SIZE-Config.BOUND_SIZE;
+		var min_x = Config.BOUND_SIZE;
 
 		for (var y = this.index_offset_y; y < (size + this.index_offset_y); y++) {
 			for (var x = this.index_offset_x; x < (size + this.index_offset_x); x++) {
@@ -151,12 +160,26 @@ WorldChunk = Class.extend({
 						block = noise_block;
 					}
 				}
-				if(y<8){block=0;}
+
+				// bound the world.
+				var secure_blocks = world_data.getSecureBlocks(y);
+				if(x<min_x && x>min_x-5){
+					block=secure_blocks[Math.ceil(this.RDM()*secure_blocks.length-1)];
+				} // left
+				if(x>max_x && x<max_x+5){
+					block=secure_blocks[Math.ceil(this.RDM()*secure_blocks.length-1)];
+				} // right
+
+				if(y<13){
+					block=0;
+					if(x<min_x || x>max_x){
+						block=-1;
+					}
+				}
 				
 				// create bounds
+				if(y<1){block=-1;} // sky
 				if(y>max_y){block=8;} // floor
-				if(x<min_x){block=8;} // left
-				if(x>max_x){block=8;} // right
 
 				world_data.set(x,y,block);
 			}
@@ -193,12 +216,16 @@ WorldEngine = Class.extend({
 		if (settings.offset) this.offset = settings.offset;
 	},
 	build: function() {
-		this.createBounds();
-
+		//this.createBounds();
+		// SPAWN TEST FLUIDS
+		/*
 		setTimeout(function(){
 			world_data.set(10,5,6);
 			world_data.set(19,5,7);
 		},100);
+		*/
+		this.landscape = render_engine.buildLandscape();
+		this.background = render_engine.buildBackground();
 	},
 	createBounds: function(){
 		var size_threshold = 1.5;
@@ -245,7 +272,11 @@ WorldEngine = Class.extend({
 			var block_data = world_data.get(blocks[i].x,blocks[i].y);
 			if(block_data===null){return;}
 			if(this.isBlockActive(blocks[i])===false){
-				block_data.enable();
+				if(blocks[i].active){
+					block_data.enable();
+				} else {
+					block_data.enableRender();
+				}
 				this.visible_blocks.push(block_data);
 			}
 		};
@@ -253,13 +284,22 @@ WorldEngine = Class.extend({
 	unloadBlocks: function(blocks){
 		for (var i = 0; i < this.visible_blocks.length; i++) {
 			var active_block = this.visible_blocks[i];
+			var is_still_visible = false;
 			var is_active = false;
 			for (var o = 0; o < blocks.length; o++) {
 				if(blocks[o].x == active_block.pos.x && blocks[o].y == active_block.pos.y){
-					is_active = true;
+					is_still_visible = true;
+					is_active = blocks[o].active;
 				}
 			};
-			if(is_active){continue;}
+			if(is_still_visible){
+				if(is_active){
+					active_block.enablePhysics();
+				} else {
+					active_block.disablePhysics();
+				}
+				continue;
+			}
 			
 			active_block.disable();
 			// remove from list
@@ -274,14 +314,19 @@ WorldEngine = Class.extend({
 		};
 		return false;
 	},
-	removeBlock: function(pos){
+	removeVisibleBlock: function(pos){
 		// remove from active blocks list
 		for (var i = 0; i < this.visible_blocks.length; i++) {
 			if(this.visible_blocks[i].pos.x == pos.x && this.visible_blocks[i].pos.y == pos.y){
+				this.visible_blocks[i].disable();
 				this.visible_blocks.splice(i,1);
 				break;
 			}
 		};
+	},
+	removeBlock: function(pos){
+		// remove from active blocks list
+		this.removeVisibleBlock(pos);
 
 		// remove from world data
 		world_data.set(pos.x,pos.y, 0);
@@ -289,22 +334,35 @@ WorldEngine = Class.extend({
 	getVisibleBlocks: function(x,y){
 		var blocks = new Array();
 		var distance = parseFloat(Config.DRAW_DISTANCE) / 2;
+		var phys_distance = parseFloat(Config.DRAW_DISTANCE-Config.PHYSICS_DISTANCE) / 2;
 		var maxblocks = Math.ceil(distance) * 2;
+		var phys_maxblocks = Math.ceil(phys_distance) * 2;
 		var max_x = Config.MAX_CHUNKS_SIZE.X * Config.CHUNK_SIZE;
 		var max_y = Config.MAX_CHUNKS_SIZE.Y * Config.CHUNK_SIZE;
-		for (var ny = -maxblocks/2+1; ny < maxblocks/2-1; ny++) {
-			for (var nx = -maxblocks/2+1; nx < maxblocks/2-1; nx++) {
+		var min_pos = -maxblocks/2+1;
+		var max_pos = maxblocks/2-1;
+		var physics_min_pos = min_pos + Math.ceil(phys_maxblocks/2);
+		var physics_max_pos = max_pos - Math.ceil(phys_maxblocks/2);
+
+		for (var ny = min_pos; ny < max_pos; ny++) {
+			for (var nx = min_pos; nx < max_pos; nx++) {
 				// circlify
-				if(ratioDistance(nx, ny, 1.23) > distance){continue;}
+				if(ratioDistance(nx, ny, Config.DRAW_RATIO) > distance){continue;}
 				// bounds
 				var relative_x = x + nx;
 				var relative_y = y + ny;
+				var active = false;
+				if(nx>physics_min_pos && nx<physics_max_pos && ny>physics_min_pos && ny<physics_max_pos){
+					active = true;
+				}
+
+
 				if(relative_x<0 || relative_x>max_x){continue;}
 				if(relative_y<0 || relative_y >max_y){continue;}
 				// create pit hole
 				if(relative_x>20 && relative_x<23){continue;}
 				// add block
-				blocks.push({'x':relative_x, 'y':relative_y});
+				blocks.push({'x':relative_x, 'y':relative_y, 'active': active});
 			};
 		};
 		return blocks;
@@ -385,7 +443,7 @@ WorldEngine = Class.extend({
 		};
 
 		// update bounds position to follow entity
-		this.updateBounds();
+		//this.updateBounds();
 
 		// center the entity
 		this.centerWorldToEntity(this.follow_entity);
@@ -393,6 +451,8 @@ WorldEngine = Class.extend({
 		for (var i = 0; i < this.entities.length; i++) {
 			this.entities[i].update();
 		};
+
+		this.landscape.update();
 	},
 	follow: function(entity){
 		this.follow_entity = entity;
@@ -418,8 +478,8 @@ WorldEngine = Class.extend({
 		var x = -(entity.pos.x*stage_size.scale)+center_x;
 		var y = -(entity.pos.y*stage_size.scale)+center_y;
 		// limit
-		if(x>=0){ x=0; } else if(x<-max_x){ x=-max_x; }
-		if(y>=0){ y=0; } else if(y<-max_y){ y=-max_y; }
+		//if(x>=0){ x=0; } else if(x<-max_x){ x=-max_x; }
+		//if(y>=0){ y=0; } else if(y<-max_y){ y=-max_y; }
 		return {x:x,y:y};
 	},
 	centerWorldToEntity: function(entity){

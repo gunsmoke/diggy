@@ -79,7 +79,7 @@ LightEngine = Class.extend({
     addLight: function(entityDef){
     	var light = null;
     	if(entityDef.id == "player"){
-    		light = this.add(new Light(342));
+    		light = this.add(new Light(282));
     	}
     	return light;
     },

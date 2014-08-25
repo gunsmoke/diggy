@@ -1,7 +1,7 @@
 var undefined;
 ConfigClass = Class.extend({
-	MAX_CHUNKS_SIZE: {X: 8, Y: 64},
-	CHUNK_SIZE:42, // must be greated then the draw distnace
+	MAX_CHUNKS_SIZE: {X: 5, Y: 5},
+	CHUNK_SIZE:25, // must be greated then the draw distnace
 	GAME_UPDATES_PER_SEC: 7,
 	GAME_LOOP_HZ: 1.0 / 10.0,
 
@@ -9,10 +9,15 @@ ConfigClass = Class.extend({
 	PHYSICS_LOOP_HZ: 1.0 / 30.0,
 
 	SCALE: 1,
-	DRAW_DISTANCE: 15,
+
+	PHYSICS_DISTANCE: 11,
+	DRAW_DISTANCE: 25,
+	BOUND_SIZE: 18,
+	DRAW_RATIO: 1,
 	LIGHTS: true,
 	DEBUG: false,
-	SEED: "123",
-	TEXTURE_PACK: 'packs/default'
+	SEED: "13",
+	TEXTURE_PACK_SCALE: 0.50,
+	TEXTURE_PACK: 'packs/high'
 });
 var Config = new ConfigClass();
