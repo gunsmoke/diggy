@@ -1,7 +1,7 @@
 var undefined;
 ConfigClass = Class.extend({
-	MAX_CHUNKS_SIZE: {X: 55, Y: 125},
-	CHUNK_SIZE:17, // must be greated then the draw distnace
+	MAX_CHUNKS_SIZE: {X: 15, Y: 125},
+	CHUNK_SIZE:25, // must be greated then the draw distnace
 	GAME_UPDATES_PER_SEC: 7,
 	GAME_LOOP_HZ: 1.0 / 10.0,
 
@@ -11,7 +11,7 @@ ConfigClass = Class.extend({
 	SCALE: 1,
 
 	PHYSICS_DISTANCE: 11,
-	DRAW_DISTANCE: 15,
+	DRAW_DISTANCE: 17,
 	BOUND_SIZE: 18,
 	DRAW_RATIO: 1,
 	LIGHTS: true,
