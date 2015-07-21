@@ -105,7 +105,7 @@ GameEngine = Class.extend({
 		var vel = this.player.physBody.GetLinearVelocity();
 		// up/down arrow
 		if (input_engine.state('move-up')){
-			vel.y-=speed*0.7;
+			vel.y-=speed*1;
 			this.player.trustAnim();
 		}
 		if (input_engine.state('move-down')){

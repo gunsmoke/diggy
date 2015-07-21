@@ -197,7 +197,21 @@ Player = Entity.extend({
 		}
 
 		if(!this.is_flying && !this.is_falling && !this.is_left && !this.is_right && !this.is_digging){
-			this.render.spine.state.setAnimationByName(0, 'standby', true);
+			if(!this.is_idle){
+				this.render.spine.state.setAnimationByName(0, 'standby', true);
+			}
+			this.is_idle = true;
+		} else {
+			this.is_idle = false;
+		}
+
+		if(this.is_idle && input_engine.state('move-up')){
+			if(!this.is_jump){
+				this.render.spine.state.setAnimationByName(0, 'jump', false);
+			}
+			this.is_jump = true;
+		} else {
+			this.is_jump = false;
 		}
 	},
 	update: function(){
