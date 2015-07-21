@@ -18,7 +18,6 @@ ParticleEngine = Class.extend({
 			_self.transformSprite(particle.sprite, particle);
 		};
 
-
 		_self.renderer.onParticleDead = function(particle) {
 			render_engine.removeParticle(particle.sprite);
 		};

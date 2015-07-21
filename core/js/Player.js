@@ -7,6 +7,7 @@ Player = Entity.extend({
 	fuel: 100,
 	maxFuel: 100,
 	isDead:false,
+	state: {},
 	digging: false,
 	touching_block: false,
 	emitters: {},
@@ -39,18 +40,16 @@ Player = Entity.extend({
 	rocketAnimation: function(){
 		this.emitters.rocket = new Proton.BehaviourEmitter();
 
-		var particle = new PIXI.Texture.fromImage("assets/img/particle.png");
-
 		this.emitters.rocket.rate = new Proton.Rate(new Proton.Span(5, 5), new Proton.Span(.01));
 
-		this.emitters.rocket.addInitialize(new Proton.ImageTarget(particle));
+		this.emitters.rocket.addInitialize(new Proton.ImageTarget(loader.resources.particle.texture));
 		this.emitters.rocket.addInitialize(new Proton.Mass(1));
-		this.emitters.rocket.addInitialize(new Proton.Life(0.5, 0.6));
-		this.emitters.rocket.addInitialize(new Proton.Velocity(new Proton.Span(5, 2), new Proton.Span(0, 0), 'polar'));
+		this.emitters.rocket.addInitialize(new Proton.Life(0.1, 0.6));
+		this.emitters.rocket.addInitialize(new Proton.Velocity(new Proton.Span(.5, .2), new Proton.Span(0, 0), 'polar'));
 		this.emitters.rocket.addBehaviour(new Proton.Scale(new Proton.Span(0.5, 1), 0));
 		this.emitters.rocket.addBehaviour(new Proton.G(6));
 		this.emitters.rocket.addBehaviour(new Proton.Alpha(0.28, 0));
-		this.emitters.rocket.addBehaviour(new Proton.Color('#826C2B', ['#EDCE72', '#5A7000'], Infinity, Proton.easeOutSine));
+		this.emitters.rocket.addBehaviour(new Proton.Color('#096680', ['#3ED1FA', '#D2B9ED'], Infinity, Proton.easeOutSine));
 		this.emitters.rocket.p.x = 0;
 		this.emitters.rocket.p.y = 0;
 		this.emitters.rocket.rotation = 180;
@@ -63,11 +62,9 @@ Player = Entity.extend({
 		this.emitters.smoke = new Proton.BehaviourEmitter();
 		this.emitters.debry = new Proton.BehaviourEmitter();
 
-		var smoke_texture = new PIXI.Texture.fromImage("assets/img/smoke.png");
-
 		this.emitters.smoke.rate = new Proton.Rate(new Proton.Span(5, 20), new Proton.Span(0.1));
 		this.emitters.smoke.addInitialize(new Proton.Mass(1));
-		this.emitters.smoke.addInitialize(new Proton.ImageTarget(smoke_texture));
+		this.emitters.smoke.addInitialize(new Proton.ImageTarget(loader.resources.smoke.texture));
 		this.emitters.smoke.addInitialize(new Proton.Life(0.5, 1));
 		this.emitters.smoke.addInitialize(new Proton.Velocity(new Proton.Span(1, 2), new Proton.Span(0, 100, true), 'polar'));
 
@@ -80,11 +77,9 @@ Player = Entity.extend({
 		
 		this.emitters.smoke.addSelfBehaviour(new Proton.RandomDrift(40, 20, .5));
 
-		var debry_texture = new PIXI.Texture.fromImage("assets/img/debry1.png");
-
 		this.emitters.debry.rate = new Proton.Rate(new Proton.Span(1, 5), new Proton.Span(0.1));
 		this.emitters.debry.addInitialize(new Proton.Mass(1));
-		this.emitters.debry.addInitialize(new Proton.ImageTarget(debry_texture));
+		this.emitters.debry.addInitialize(new Proton.ImageTarget(loader.resources.debry.texture));
 		this.emitters.debry.addInitialize(new Proton.Life(0.4, 0.6));
 		this.emitters.debry.addInitialize(new Proton.Velocity(new Proton.Span(1, 1), new Proton.Span(1, 42, true), 'polar'));
 
@@ -110,19 +105,104 @@ Player = Entity.extend({
 			this.emitters.rocket.emit(0.3);
 		}
 	},
-	handleActions: function(){
-		if(input_engine.state('digg') && !input_engine.state('move-up')){
-			this.digging = true;
+	isDigging: function(){
+		return this.state.digging;
+	},
+	stateMachine: function(){
+
+		var velocity = this.physBody.GetLinearVelocity();
+		if(velocity.x < 0.4 && velocity.x > -0.4) {
+			this.state.right = false;
+			this.state.left = false;
+		} else if(velocity.x > 0.4) {
+			this.state.right = true;
+			this.state.left = false;
 		} else {
-			this.digging = false;
+			this.state.right = false;
+			this.state.left = true;
+		}
+
+		if(velocity.y<=-1){
+			this.state.flying = true;
+			this.state.falling = false;
+		} else if(velocity.y>0.8) {
+			this.state.flying = false;
+			this.state.falling = true;
+		} else {
+			this.state.flying = false;
+			this.state.falling = false;
+		}
+
+		// DEFAULTS
+		if(this.state.falling && this.state.flying && this.state.left && this.state.right){
+			this.state.digging = false;
+		} else {
+
+			if(input_engine.state('digg') && !input_engine.state('move-up'))
+			{
+				this.state.digging = true;
+			} else {
+				this.state.digging = false;
+			}
 		}
 	},
-	isDigging: function(){
-		return this.digging;
+	anim: function(){
+
+		if(this.state.digging){
+			if(!this.is_digging){
+				this.render.spine.state.setAnimationByName(0, 'digg_down', true);
+			}
+			this.is_digging = true;
+			return;
+		} else {
+			this.is_digging = false;
+		}
+
+		if(this.state.flying){
+			if(!this.is_flying){
+        		this.render.spine.state.setAnimationByName(0, 'fly', true);
+			}
+			this.is_flying = true;
+		} else {
+			this.is_flying = false;
+		}
+		if(this.state.falling){
+			if(!this.is_falling){
+				this.render.spine.state.setAnimationByName(0, 'fall', true);
+			}
+			this.is_falling = true;
+		} else {
+			this.is_falling = false;
+		}
+		if(!this.is_falling && !this.is_flying){
+			if(this.state.right){
+				if(!this.is_right){
+					this.render.spine.state.setAnimationByName(0, 'walk_right', true);
+				}
+				this.is_right = true;
+			} else {
+				this.is_right = false;
+			}
+			if(this.state.left){
+				if(!this.is_left){
+					this.render.spine.state.setAnimationByName(0, 'walk_left', true);
+				}
+				this.is_left = true;
+			} else {
+				this.is_left = false;
+			}
+		} else {
+			this.is_right = false;
+			this.is_left = false;
+		}
+
+		if(!this.is_flying && !this.is_falling && !this.is_left && !this.is_right && !this.is_digging){
+			this.render.spine.state.setAnimationByName(0, 'standby', true);
+		}
 	},
 	update: function(){
-		this.handleActions();
-		//var velocity = this.physBody.GetLinearVelocity();
+		//console.log(this.state);
+		this.stateMachine();
 		var position = this.physBody.GetPosition();
 		var render = this.render;
 		var player_size = 64;
@@ -136,8 +216,11 @@ Player = Entity.extend({
 		this.emitters.smoke.p.y = this.emitters.debry.p.y = this.pos.y;
 
 		this.emitters.rocket.p.x = this.pos.x;
-		this.emitters.rocket.p.y = this.pos.y + 28;
+		this.emitters.rocket.p.y = this.pos.y + 12;
 
 		this.light.setPosition(this.physBody.GetPosition());
+
+
+		this.anim();
 	}
 });

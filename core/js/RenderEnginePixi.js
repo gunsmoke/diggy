@@ -1,20 +1,77 @@
+
+
+function onAssetsLoadedaaaxx(loader, res)
+{
+    // create a spine boy
+    var spineBoy = new PIXI.spine.Spine(res.diggy.spineData);
+
+    // set the position
+    spineBoy.position.x = 230;
+    spineBoy.position.y = 366;
+
+    spineBoy.scale.set(1);
+
+    // set up the mixes!
+    spineBoy.stateData.setMixByName('standby', 'jump', 0.2);
+    spineBoy.stateData.setMixByName('jump', 'fly', 0.2);
+    spineBoy.stateData.setMixByName('fly', 'standby', 0.2);
+
+    // play animation
+    spineBoy.state.setAnimationByName(0, 'standby', true);
+
+    render_engine.stage.addChild(spineBoy);
+
+    render_engine.stage.on('click', function ()
+    {
+        spineBoy.state.setAnimationByName(0, 'jump', false);
+        spineBoy.state.addAnimationByName(0, 'standby', true, 0);
+    });
+}
+
+
+
 PlayerRender = Class.extend({
 	graphics: null,
 	player_size: 28,
+	spine: null,
 	init: function(entityDef){
 
+    	this.spine = new PIXI.spine.Spine(loader.resources.diggy.spineData);
+		// set the position
+		this.spine.position.x = 0;
+		this.spine.position.y = 29;
+
+		this.spine.scale.set(0.1);
+
+    	this.spine.state.setAnimationByName(0, 'standby', true);
+
+    	// SET MIXES
+		this.spine.stateData.setMixByName('standby', 'jump', 0.2);
+		this.spine.stateData.setMixByName('jump', 'fly', 0.2);
+		this.spine.stateData.setMixByName('fly', 'standby', 0.2);
+		this.spine.stateData.setMixByName('fly', 'fall', 0.2);
+		this.spine.stateData.setMixByName('standby', 'fall', 0.2);
+
+
+
+		this.graphics = new PIXI.Container();
+		this.graphics.addChild(this.spine);
+
+    	/*
 		var sprite = PIXI.Sprite.fromImage("assets/img/player.png");
 		sprite.position.x = sprite.position.y = -35;
 		sprite.scale.x = sprite.scale.y = 0.5;
-		this.graphics = new PIXI.DisplayObjectContainer();
+		this.graphics = new PIXI.Container();
 
 		var mask = new PIXI.Graphics();
 		mask.beginFill(0xC9C0B1);
 		mask.drawCircle(0, 0, this.player_size);
 		//this.graphics.addChild(mask);
-		this.graphics.addChild(sprite);
-		//sprite.mask = mask;
 
+		this.graphics.addChild(spine);
+		//this.graphics.addChild(sprite);
+		//sprite.mask = mask;
+		*/
 	},
 	setPosition: function(pos){
 		this.graphics.position = new PIXI.Point(pos.x,pos.y);
@@ -31,7 +88,7 @@ DebryRender = Class.extend({
 		sprite.position.x = sprite.position.y = -32;
 		sprite.rotation = Math.random()-0.5;
 
-		this.graphics = new PIXI.DisplayObjectContainer();
+		this.graphics = new PIXI.Container();
 
 		var mask = new PIXI.Graphics();
 		mask.beginFill(entityDef.color);
@@ -62,7 +119,7 @@ BlockRender = Class.extend({
 	damage_sprite: null,
 	block_size: 64,
 	init: function(entityDef){
-		this.graphics = new PIXI.DisplayObjectContainer();
+		this.graphics = new PIXI.Container();
 
 		var offset = this.block_size/2;
 
@@ -78,7 +135,7 @@ BlockRender = Class.extend({
 
 		//var texture = PIXI.Texture.fromImage("assets/textures/blocks/"+entityDef.asset+".png");
 		
-		//this.sprite = new PIXI.TilingSprite(texture, 64, 64);
+		//this.sprite = new PIXI.extras.TilingSprite(texture, 64, 64);
 
 
 		this.setPosition({
@@ -115,7 +172,7 @@ BlockRender = Class.extend({
 		}
 		this.damage_sprite = PIXI.Sprite.fromImage("assets/img/destroy_stage_"+stage+".png");
 		this.damage_sprite.anchor.x = this.damage_sprite.anchor.y = 0.5;
-		this.damage_sprite.blendMode = PIXI.blendModes.MULTIPLY;
+		this.damage_sprite.blendMode = PIXI.BLEND_MODES.MULTIPLY;
 		this.damage_sprite.alpha = 0.5;
 		this.damage_sprite.scale.x = this.damage_sprite.scale.y = Config.TEXTURE_PACK_SCALE;
 		this.graphics.addChild(this.damage_sprite);
@@ -147,7 +204,7 @@ FluidRender = Class.extend({
 
 		if(entityDef.asset!=null){
 			var texture = PIXI.Texture.fromImage("assets/"+Config.TEXTURE_PACK+"/textures/blocks/"+entityDef.asset+".png");
-			this.sprite = new PIXI.TilingSprite(texture, 64, 64);
+			this.sprite = new PIXI.extras.TilingSprite(texture, 64, 64);
 			this.sprite.position.x = this.sprite.position.y = -32;
 		} else {
 			var color = "0x"+color.substr(1);
@@ -210,7 +267,7 @@ LightRender = Class.extend({
 	radius: null,
 	shineLight: true,
 	init: function(entityDef){
-		this.graphics = new PIXI.DisplayObjectContainer();
+		this.graphics = new PIXI.Container();
 
 		this.mask = new PIXI.Graphics();
 		this.mask.beginFill(this.color);
@@ -224,7 +281,7 @@ LightRender = Class.extend({
 		this.sprite = PIXI.Sprite.fromImage("assets/img/light-mask.png");
 		this.sprite.position.x = this.sprite.position.y = -280;
 		this.graphics.addChild(this.sprite);
-		this.sprite.blendMode = PIXI.blendModes.ADD;
+		this.sprite.blendMode = PIXI.BLEND_MODES.ADD;
 		this.sprite.mask = this.mask;
 	},
     setPosition: function(pos){
@@ -236,7 +293,7 @@ LightRender = Class.extend({
     	this.mask.beginFill(this.color);
 		this.mask.lineStyle(0, this.color);
 		if(path.length!=0){
-			this.mask.graphicsData[0].points = path;
+			this.mask.drawPolygon(path);
 		} else {
 			this.mask.drawCircle(0,0,300);
 		}
@@ -257,10 +314,10 @@ BackgorundRender = Class.extend({
 	graphics: null,
 	world_width: Config.MAX_CHUNKS_SIZE.X*Config.CHUNK_SIZE*64,
 	init: function(){
-		this.graphics = new PIXI.DisplayObjectContainer();
+		this.graphics = new PIXI.Container();
 
 		var texture = PIXI.Texture.fromImage("assets/img/underground.jpg");
-		this.underground = new PIXI.TilingSprite(texture, this.world_width, 370);
+		this.underground = new PIXI.extras.TilingSprite(texture, this.world_width, 370);
 		this.underground.position.x = -32;
 		this.underground.position.y = 800;
 
@@ -278,7 +335,7 @@ LandscapeRender = Class.extend({
 	init: function(){
 		Math.seedrandom(Config.SEED);
 		this.RDM = Math.random;
-		this.graphics = new PIXI.DisplayObjectContainer();
+		this.graphics = new PIXI.Container();
 
 		var box = new PIXI.Graphics();
 		var offset = this.block_size/2;
@@ -288,7 +345,7 @@ LandscapeRender = Class.extend({
 		this.sprite.position.y = -32;
 
 		var texture = PIXI.Texture.fromImage("assets/img/land.jpg");
-		this.land = new PIXI.TilingSprite(texture, this.world_width, 50);
+		this.land = new PIXI.extras.TilingSprite(texture, this.world_width, 50);
 		this.land.position.x = 0;
 		this.land.position.y = 751;
 
@@ -338,9 +395,9 @@ LandscapeRender = Class.extend({
 		var length = 1400;
 		var texture = PIXI.Texture.fromImage("assets/img/pattern1.jpg");
 
-		var mount = new PIXI.DisplayObjectContainer();
+		var mount = new PIXI.Container();
 
-		var mountain = new PIXI.TilingSprite(texture, length*2, altitude);
+		var mountain = new PIXI.extras.TilingSprite(texture, length*2, altitude);
 		mountain.tilePosition.x = this.RDM()*1200;
 		mountain.tilePosition.y = this.RDM()*600;
 
@@ -370,8 +427,8 @@ LandscapeRender = Class.extend({
 		mountain.position.x = x;
 		mountain.position.y = 760;
 
-		var grayFilter = new PIXI.GrayFilter();
-		var sepiaFilter = new PIXI.SepiaFilter();
+		var grayFilter = new PIXI.filters.GrayFilter();
+		var sepiaFilter = new PIXI.filters.SepiaFilter();
 		grayFilter.gray = this.RDM()*1;
 		sepiaFilter.sepia = this.RDM()*1;
 
@@ -457,7 +514,7 @@ RenderFog = Class.extend({
 	fog_bottom: null,
 	fog_left: null,
 	init: function(){
-		this.container = new PIXI.DisplayObjectContainer();
+		this.container = new PIXI.Container();
 		this.container.position = new PIXI.Point(0,0);
 
 		this.fog_top = new PIXI.Graphics();
@@ -471,8 +528,8 @@ RenderFog = Class.extend({
 		this.container.addChild(this.fog_bottom);
 		this.container.addChild(this.fog_left);
 
-		var blurFilter = new PIXI.BlurFilter();
-		blurFilter.blur = 64;
+		var blurFilter = new PIXI.filters.BlurFilter();
+		blurFilter.blur = 22;
 		this.container.filters = [blurFilter,]
 
 		//this.update();
@@ -515,7 +572,7 @@ RenderFog = Class.extend({
 RenderLayer = Class.extend({
 	container: null,
 	init: function(){
-		this.container = new PIXI.DisplayObjectContainer();
+		this.container = new PIXI.Container();
 	},
 	add: function(object){
 		this.container.addChild(object.graphics);
@@ -528,18 +585,17 @@ RenderLayer = Class.extend({
 	}
 });
 
-
 RenderEngine = Class.extend({
 	stage: null,
 	layers: new Object(),
 	renderer: null,
-	stage_size: {width: 500, height:500, scale:Config.SCALE},
+	stage_size: {width: 460, height:680, scale:Config.SCALE},
 	particles: null,
 	init: function () {},
 	build: function() {
-		this.stage = new PIXI.Stage(0x170f09);
-
-		this.renderer = PIXI.autoDetectRenderer(this.stage_size.width, this.stage_size.height);
+		this.stage = new PIXI.Container();
+		
+		this.renderer = PIXI.autoDetectRenderer(this.stage_size.width, this.stage_size.height, { transparent: true });
 		$("#world_container").append(this.renderer.view);
 
 
@@ -549,7 +605,7 @@ RenderEngine = Class.extend({
 		this.addLayer("debug");
 
 		
-		this.particles = new PIXI.DisplayObjectContainer();
+		this.particles = new PIXI.Container();
 		this.particles.position.x = this.particles.position.y = 0;
 		this.stage.addChild(this.particles);
 
@@ -558,8 +614,8 @@ RenderEngine = Class.extend({
 		this.addLayer("debry");
 		this.addLayer("blocks");
 
-		this.fog = new RenderFog();
-		this.stage.addChild(this.fog.container);
+		//this.fog = new RenderFog();
+		//this.stage.addChild(this.fog.container);
 
 
 		this.applyScale();
@@ -567,17 +623,17 @@ RenderEngine = Class.extend({
 	setWidth: function(width){
 		this.stage_size.width = width;
 		this.renderer.resize(width,this.stage_size.height);
-		this.fog.update();
+		//this.fog.update();
 	},
 	setHeight: function(height){
 		this.stage_size.height = height;
 		this.renderer.resize(this.stage_size.width,height);
-		this.fog.update();
+		//this.fog.update();
 	},
 	setScale: function(scale){
 		this.stage_size.scale = scale;
 		this.applyScale();
-		this.fog.update();
+		//this.fog.update();
 	},
 	applyScale: function(){
 		var scale = new PIXI.Point(this.stage_size.scale,this.stage_size.scale);

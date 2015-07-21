@@ -1,6 +1,6 @@
 var undefined;
 ConfigClass = Class.extend({
-	MAX_CHUNKS_SIZE: {X: 15, Y: 125},
+	MAX_CHUNKS_SIZE: {X: 3, Y: 5},
 	CHUNK_SIZE:25, // must be greated then the draw distnace
 	GAME_UPDATES_PER_SEC: 7,
 	GAME_LOOP_HZ: 1.0 / 10.0,

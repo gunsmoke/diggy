@@ -2,13 +2,13 @@ GameEngine = Class.extend({
 	entities: [],
 	player: null,
 	tick: 0,
-	init: function () {},
+	init: function () {
+	},
 	setup: function () {
 		// setup
 		world_engine.setup({
 			offset: {x:0, y:0}
 		});
-
 		// build
 		this.build();
 		// bind

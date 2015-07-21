@@ -4,7 +4,15 @@ body{
 
 #world_container{
 	position:relative;
-	width:400px;
+	width:460px;
+	margin: 36px auto;
+	border:22px #333 solid;
+	padding:0px;
+	background: #170f09;
+}
+#world_container canvas{
+	margin:0px;
+	display: block;
 }
 
 .wrapper{

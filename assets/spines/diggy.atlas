@@ -1,0 +1,110 @@
+
+diggy.png
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+body
+  rotate: false
+  xy: 2, 87
+  size: 277, 409
+  orig: 277, 409
+  offset: 0, 0
+  index: -1
+drill_left
+  rotate: false
+  xy: 281, 334
+  size: 211, 162
+  orig: 211, 162
+  offset: 0, 0
+  index: -1
+drill_right
+  rotate: false
+  xy: 281, 170
+  size: 210, 162
+  orig: 210, 162
+  offset: 0, 0
+  index: -1
+knee_left
+  rotate: false
+  xy: 220, 50
+  size: 51, 35
+  orig: 51, 35
+  offset: 0, 0
+  index: -1
+knee_right
+  rotate: false
+  xy: 493, 238
+  size: 50, 35
+  orig: 50, 35
+  offset: 0, 0
+  index: -1
+lower-arm_left
+  rotate: true
+  xy: 281, 100
+  size: 68, 99
+  orig: 68, 99
+  offset: 0, 0
+  index: -1
+lower-arm_right
+  rotate: true
+  xy: 119, 17
+  size: 68, 99
+  orig: 68, 99
+  offset: 0, 0
+  index: -1
+lower-leg_left
+  rotate: true
+  xy: 382, 103
+  size: 65, 93
+  orig: 65, 93
+  offset: 0, 0
+  index: -1
+lower-leg_right
+  rotate: true
+  xy: 494, 331
+  size: 64, 93
+  orig: 64, 93
+  offset: 0, 0
+  index: -1
+upper-arm_left
+  rotate: true
+  xy: 494, 397
+  size: 99, 191
+  orig: 99, 191
+  offset: 0, 0
+  index: -1
+upper-arm_right
+  rotate: true
+  xy: 687, 398
+  size: 98, 191
+  orig: 98, 191
+  offset: 0, 0
+  index: -1
+upper-leg-back_left
+  rotate: false
+  xy: 589, 341
+  size: 92, 54
+  orig: 92, 54
+  offset: 0, 0
+  index: -1
+upper-leg-back_right
+  rotate: false
+  xy: 493, 275
+  size: 92, 54
+  orig: 92, 54
+  offset: 0, 0
+  index: -1
+upper-leg_left
+  rotate: true
+  xy: 2, 2
+  size: 83, 115
+  orig: 83, 115
+  offset: 0, 0
+  index: -1
+upper-leg_right
+  rotate: true
+  xy: 880, 413
+  size: 83, 115
+  orig: 83, 115
+  offset: 0, 0
+  index: -1
