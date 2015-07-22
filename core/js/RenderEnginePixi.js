@@ -13,8 +13,14 @@ function onAssetsLoadedaaaxx(loader, res)
 
     // set up the mixes!
     spineBoy.stateData.setMixByName('standby', 'jump', 0.2);
+    spineBoy.stateData.setMixByName('standby', 'digg_down', 0.2);
+    spineBoy.stateData.setMixByName('standby', 'walk_left', 0.2);
+    spineBoy.stateData.setMixByName('standby', 'walk_right', 0.2);
     spineBoy.stateData.setMixByName('jump', 'fly', 0.2);
     spineBoy.stateData.setMixByName('fly', 'standby', 0.2);
+    spineBoy.stateData.setMixByName('fly', 'digg_down', 0.2);
+    spineBoy.stateData.setMixByName('walk_right', 'walk_left', 0.2);
+    spineBoy.stateData.setMixByName('walk_left', 'walk_right', 0.2);
 
     // play animation
     spineBoy.state.setAnimationByName(0, 'standby', true);

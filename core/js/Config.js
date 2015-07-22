@@ -8,6 +8,7 @@ ConfigClass = Class.extend({
 	PHYSICS_UPDATES_PER_SEC: 30,
 	PHYSICS_LOOP_HZ: 1.0 / 30.0,
 
+	SCALE: 1.5,
 
 	PHYSICS_DISTANCE: 11,
 	DRAW_DISTANCE: 17,

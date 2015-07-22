@@ -216,7 +216,7 @@ Player = Entity.extend({
 	},
 	update: function(){
 		//console.log(this.state);
-		this.stateMachine();
+		this.anim();
 		var position = this.physBody.GetPosition();
 		var render = this.render;
 		var player_size = 64;
@@ -234,7 +234,7 @@ Player = Entity.extend({
 
 		this.light.setPosition(this.physBody.GetPosition());
 
+		this.stateMachine();
 
-		this.anim();
 	}
 });
