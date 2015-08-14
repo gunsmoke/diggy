@@ -45,13 +45,20 @@ Block = Entity.extend({
 	},
 	onTouch: function(body, impulse) {
 		var u = body?body.GetUserData():null;
-		
-		if(impulse>0.35 && u!==null){
-			if(u.id=="player" && u.ent.isDigging()){
-				u.ent.diggAnim();
-				this.doDamage();
+		if(u!==null){
+			if(u.id=="player"){
+				if(impulse>1){
+					audio_engine.playSound("land1");
+				}
+				if(impulse>0.35){
+					if(u.ent.isDigging()){
+						u.ent.diggAnim();
+						this.doDamage();
+					}
+				}
 			}
 		}
+		
 	},
 	doDamage: function(amount){
 		var max_x = Config.MAX_CHUNKS_SIZE.X*Config.CHUNK_SIZE-Config.BOUND_SIZE;
@@ -77,6 +84,7 @@ Block = Entity.extend({
 		}
 	},
 	remove: function(){
+		audio_engine.playSound("dirt1");
 		world_engine.removeBlock(this.pos);
 	},
 	enable: function(){

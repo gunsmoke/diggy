@@ -80,7 +80,7 @@ Player = Entity.extend({
 		this.emitters.debry.rate = new Proton.Rate(new Proton.Span(1, 5), new Proton.Span(0.1));
 		this.emitters.debry.addInitialize(new Proton.Mass(1));
 		this.emitters.debry.addInitialize(new Proton.ImageTarget(loader.resources.debry.texture));
-		this.emitters.debry.addInitialize(new Proton.Life(0.4, 0.6));
+		this.emitters.debry.addInitialize(new Proton.Life(0.1, 0.6));
 		this.emitters.debry.addInitialize(new Proton.Velocity(new Proton.Span(1, 1), new Proton.Span(1, 42, true), 'polar'));
 
 		this.emitters.debry.addBehaviour(new Proton.Gravity(3));
@@ -95,13 +95,18 @@ Player = Entity.extend({
 		particle_engine.addEmitter(this.emitters.debry);
 	},
 	diggAnim: function(){
+		if(this.emitters.debry.emitTime>0.60){
+			audio_engine.playSound("drill");
+			this.emitters.debry.emit(0.6);
+		}
 		if(this.emitters.smoke.emitTime>0.55){
 			this.emitters.smoke.emit(0.5);
-			this.emitters.debry.emit(0.4);
 		}
+		
 	},
 	trustAnim: function(){
 		if(this.emitters.rocket.emitTime>0.3){
+			audio_engine.playSound("thrust");
 			this.emitters.rocket.emit(0.3);
 		}
 	},
@@ -218,13 +223,12 @@ Player = Entity.extend({
 		//console.log(this.state);
 		this.anim();
 		var position = this.physBody.GetPosition();
-		var render = this.render;
 		var player_size = 64;
 		this.pos = {
 			x: (position.x*player_size)+2,
 			y: (position.y*player_size)+2
 		}
-		render.setPosition(this.pos);
+		this.render.setPosition(this.pos);
 
 		this.emitters.smoke.p.x = this.emitters.debry.p.x = this.pos.x;
 		this.emitters.smoke.p.y = this.emitters.debry.p.y = this.pos.y;

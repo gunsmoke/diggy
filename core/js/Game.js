@@ -8,6 +8,7 @@ stats.domElement.style.zIndex = '1444';
 document.body.appendChild( stats.domElement );
 
 function onAssetsLoaded(loader, res){
+
 	game_engine.setup();
 
 	(function gameloop(){
@@ -20,9 +21,14 @@ function onAssetsLoaded(loader, res){
 	})();
 }
 
+function onAudioAssetsLoaded(loader, res){
+	console.log("sounds loaded");
+}
+
 function init(){
 
 	loader.load(onAssetsLoaded);
+	audio_loader.load(onAudioAssetsLoaded);
 
 }
 
