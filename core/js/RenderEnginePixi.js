@@ -1,45 +1,10 @@
 
 
-function onAssetsLoadedaaaxx(loader, res)
-{
-    // create a spine boy
-    var spineBoy = new PIXI.spine.Spine(res.diggy.spineData);
-
-    // set the position
-    spineBoy.position.x = 230;
-    spineBoy.position.y = 366;
-
-    spineBoy.scale.set(1);
-
-    // set up the mixes!
-    spineBoy.stateData.setMixByName('standby', 'jump', 0.2);
-    spineBoy.stateData.setMixByName('standby', 'digg_down', 0.2);
-    spineBoy.stateData.setMixByName('standby', 'walk_left', 0.2);
-    spineBoy.stateData.setMixByName('standby', 'walk_right', 0.2);
-    spineBoy.stateData.setMixByName('jump', 'fly', 0.2);
-    spineBoy.stateData.setMixByName('fly', 'standby', 0.2);
-    spineBoy.stateData.setMixByName('fly', 'digg_down', 0.2);
-    spineBoy.stateData.setMixByName('walk_right', 'walk_left', 0.2);
-    spineBoy.stateData.setMixByName('walk_left', 'walk_right', 0.2);
-
-    // play animation
-    spineBoy.state.setAnimationByName(0, 'standby', true);
-
-    render_engine.stage.addChild(spineBoy);
-
-    render_engine.stage.on('click', function ()
-    {
-        spineBoy.state.setAnimationByName(0, 'jump', false);
-        spineBoy.state.addAnimationByName(0, 'standby', true, 0);
-    });
-}
-
-
-
 PlayerRender = Class.extend({
 	graphics: null,
 	player_size: 28,
 	spine: null,
+	explosion: null,
 	init: function(entityDef){
 
     	this.spine = new PIXI.spine.Spine(loader.resources.diggy.spineData);
@@ -57,12 +22,18 @@ PlayerRender = Class.extend({
 		this.spine.stateData.setMixByName('fly', 'standby', 0.2);
 		this.spine.stateData.setMixByName('fly', 'fall', 0.2);
 		this.spine.stateData.setMixByName('standby', 'fall', 0.2);
+		// death mixes
+		this.spine.stateData.setMixByName('standby', 'death', 0.2);
+		this.spine.stateData.setMixByName('fly', 'death', 0.2);
+		this.spine.stateData.setMixByName('fall', 'death', 0.2);
+		this.spine.stateData.setMixByName('jump', 'death', 0.2);
 
 
 
 		this.graphics = new PIXI.Container();
 		this.graphics.addChild(this.spine);
 
+		this.initExplosion();
     	/*
 		var sprite = PIXI.Sprite.fromImage("assets/img/player.png");
 		sprite.position.x = sprite.position.y = -35;
@@ -78,6 +49,25 @@ PlayerRender = Class.extend({
 		//this.graphics.addChild(sprite);
 		//sprite.mask = mask;
 		*/
+	},
+	initExplosion: function(){
+		var explosionTextures = [];
+
+		for (i = 0; i < 26; i++)
+		{
+			var texture = PIXI.Texture.fromFrame('Explosion_Sequence_A ' + (i+1) + '.png');
+			explosionTextures.push(texture);
+		}
+
+		this.explosion = new PIXI.extras.MovieClip(explosionTextures);
+		this.explosion.alpha = 0;
+		this.explosion.position.x = 0;
+		this.explosion.position.y = 0;
+		this.explosion.anchor.x = 0.5;
+		this.explosion.anchor.y = 0.5;
+		this.explosion.rotation = 0;
+		this.explosion.scale.set(0.75);
+		this.graphics.addChild(this.explosion);
 	},
 	setPosition: function(pos){
 		this.graphics.position = new PIXI.Point(pos.x,pos.y);
@@ -322,8 +312,7 @@ BackgorundRender = Class.extend({
 	init: function(){
 		this.graphics = new PIXI.Container();
 
-		var texture = PIXI.Texture.fromImage("assets/img/underground.jpg");
-		this.underground = new PIXI.extras.TilingSprite(texture, this.world_width, 370);
+		this.underground = new PIXI.extras.TilingSprite(loader.resources.underground.texture, this.world_width, 370);
 		this.underground.position.x = -32;
 		this.underground.position.y = 800;
 
@@ -346,12 +335,7 @@ LandscapeRender = Class.extend({
 		var box = new PIXI.Graphics();
 		var offset = this.block_size/2;
 
-		this.sprite = PIXI.Sprite.fromImage("assets/img/bg.jpg");
-		this.sprite.position.x = 0;
-		this.sprite.position.y = -32;
-
-		var texture = PIXI.Texture.fromImage("assets/img/land.jpg");
-		this.land = new PIXI.extras.TilingSprite(texture, this.world_width, 50);
+		this.land = new PIXI.extras.TilingSprite(loader.resources.land.texture, this.world_width, 50);
 		this.land.position.x = 0;
 		this.land.position.y = 751;
 
@@ -362,12 +346,11 @@ LandscapeRender = Class.extend({
 
 		this.cloudGenerator();
 		this.mountainGenerator();
-
-		this.skyBox = PIXI.Sprite.fromImage("assets/img/sky.jpg");
-		this.skyBox.position.x = this.skyBox.position.y = -31;
+		this.skyBox = new PIXI.Sprite();
+		this.skyBox.texture = loader.resources.sky.texture;
+		this.skyBox.position.x = this.skyBox.position.y = -100;
 
 		this.graphics.addChild(this.skyBox);
-		//this.graphics.addChild(this.sprite);
 
 		for (var i = 0; i < this.clouds.length; i++) {
 			this.graphics.addChild(this.clouds[i]);
@@ -399,7 +382,7 @@ LandscapeRender = Class.extend({
 		var altitude = Math.ceil(this.RDM()*400);
 		if(altitude<220){altitude=220;}
 		var length = 1400;
-		var texture = PIXI.Texture.fromImage("assets/img/pattern1.jpg");
+		var texture = loader.resources.mountain_pattern.texture;
 
 		var mount = new PIXI.Container();
 
@@ -461,7 +444,9 @@ LandscapeRender = Class.extend({
 	},
 	createCloud: function(x){
 
-		var cloud = PIXI.Sprite.fromImage("assets/img/cloud"+Math.ceil(this.RDM()*3)+".png");
+
+		var cloud = new PIXI.Sprite();
+		cloud.texture = loader.resources["cloud"+Math.ceil(this.RDM()*3)].texture;
 		cloud.position.x = x;
 
 		var altitude = Math.round(this.RDM()*460);
@@ -605,9 +590,9 @@ RenderEngine = Class.extend({
 		$("#world_container").append(this.renderer.view);
 
 
-		this.addLayer("landscape");
 		this.addLayer("background");
 		this.addLayer("light");
+		this.addLayer("landscape");
 		this.addLayer("debug");
 
 		

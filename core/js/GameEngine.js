@@ -2,6 +2,7 @@ GameEngine = Class.extend({
 	entities: [],
 	player: null,
 	tick: 0,
+	_lasthudtick: 0,
 	init: function () {
 	},
 	setup: function () {
@@ -105,8 +106,10 @@ GameEngine = Class.extend({
 		var vel = this.player.physBody.GetLinearVelocity();
 		// up/down arrow
 		if (input_engine.state('move-up')){
-			vel.y-=speed*1;
-			this.player.trustAnim();
+			if(this.player.canFly()){
+				vel.y-=speed*1;
+				this.player.trustAnim();
+			}
 		}
 		if (input_engine.state('move-down')){
 			vel.y+=speed;	
@@ -129,29 +132,41 @@ GameEngine = Class.extend({
 		}
 	},
 	get_player_depth: function(){
-		var depth = Math.floor((Math.ceil(this.player.pos.y) - 452)/10);
+		var depth = Math.floor((Math.ceil(this.player.pos.y) - 768)/10);
 		if(depth<0){depth=0;}
 		return depth
 	},
-	debug_monitor: function() {
+	updateHUD: function(){
+		var hudtick = Math.floor(this.tick/60);
+		if(hudtick>this._lasthudtick){
+			// player health
+			var health = this.player.health+"%";
+			$("#health .progress-bar").width(health).text(health);
+			this._lasthudtick = hudtick;
 
-		var depth = this.get_player_depth();
-		/*
-		if(depth>50){
-			Config.DRAW_DISTANCE = 13;
-		} else if(depth>250){
-			Config.DRAW_DISTANCE = 11;
-		} else {
-			Config.DRAW_DISTANCE = 17;
-		}
-		*/
-		if(depth/1000>1){
-			depth = (depth/1000).toFixed(2) + "km";
-		} else {
-			depth = depth + "m";
-		}
+			// player fuel
+			var fuel = this.player.fuel+"%";
+			$("#fuel .progress-bar").width(fuel).text(fuel);
 
-		$("#debug_monitor .depth").text(depth);
+			// player temprature
+			var temp = this.player.temprature;
+			var ptemp = Math.ceil(temp/this.player.maxTemprature*100);
+			if(ptemp>100){
+				ptemp = 100;
+			}
+			$("#temprature .progress-bar").width(ptemp+"%").text(temp+"C");
+
+			// player depth
+			var depth = this.player.depth;
+			if(depth/1000>1){
+				depth = (depth/1000).toFixed(2) + "km";
+			} else {
+				depth = depth + "m";
+			}
+			$("#depth").text(depth);
+
+			this._lasthudtick = hudtick;
+		}
 	},
 	update: function () {
 		this.player.update();
@@ -161,7 +176,13 @@ GameEngine = Class.extend({
 		particle_engine.update();	
 		input_engine.update();
 
-		this.debug_monitor();
+		this.player.depth = this.get_player_depth();
+		if(this.player.markForDeath){
+			console.log("GAME OVER")
+			this.player.kill();
+		}
+
+		this.updateHUD();
 		this.tick++;
 	},
 	keydown: function (event) {

@@ -2,10 +2,14 @@ Player = Entity.extend({
 	physBody: null,
 	render: null,
 	light: null,
+	depth: 0,
 	health: 100,
 	maxHealth: 100,
 	fuel: 100,
 	maxFuel: 100,
+	temprature: 36,
+	tempraturePool: 0,
+	maxTemprature: 46,
 	isDead:false,
 	state: {},
 	digging: false,
@@ -34,7 +38,6 @@ Player = Entity.extend({
 
 
 		this.diggingAnimation();
-
 		this.rocketAnimation();
 	},
 	rocketAnimation: function(){
@@ -94,9 +97,21 @@ Player = Entity.extend({
 		particle_engine.addEmitter(this.emitters.smoke);
 		particle_engine.addEmitter(this.emitters.debry);
 	},
+	expAnim: function(){
+		var _self = this;
+		// create an array to store the textures
+		audio_engine.playSound("exp");
+		this.render.explosion.alpha = 1;
+		this.render.explosion.play();
+		setTimeout(function(){
+			_self.render.graphics.alpha = 0;
+		}, 430);
+	},
 	diggAnim: function(){
 		if(this.emitters.debry.emitTime>0.60){
 			audio_engine.playSound("drill");
+			this.tempraturePool+=0.13;
+			this.consumeFuel(0);
 			this.emitters.debry.emit(0.6);
 		}
 		if(this.emitters.smoke.emitTime>0.55){
@@ -107,10 +122,20 @@ Player = Entity.extend({
 	trustAnim: function(){
 		if(this.emitters.rocket.emitTime>0.3){
 			audio_engine.playSound("thrust");
+			this.consumeFuel(1);
 			this.emitters.rocket.emit(0.3);
 		}
 	},
+	canFly: function(){
+		if(this.fuel<=0){return false;}
+		return true;
+	},
+	canDigg: function(){
+		if(this.fuel<=0){return false;}
+		return true;
+	},
 	isDigging: function(){
+		if(!this.canDigg()){return false;}
 		return this.state.digging;
 	},
 	stateMachine: function(){
@@ -153,7 +178,7 @@ Player = Entity.extend({
 	},
 	anim: function(){
 
-		if(this.state.digging){
+		if(this.state.digging && this.canDigg()){
 			if(!this.is_digging){
 				this.render.spine.state.setAnimationByName(0, 'digg_down', true);
 			}
@@ -163,7 +188,7 @@ Player = Entity.extend({
 			this.is_digging = false;
 		}
 
-		if(this.state.flying){
+		if(this.state.flying && this.canFly()){
 			if(!this.is_flying){
         		this.render.spine.state.setAnimationByName(0, 'fly', true);
 			}
@@ -211,7 +236,7 @@ Player = Entity.extend({
 		}
 
 		if(this.is_idle && input_engine.state('move-up')){
-			if(!this.is_jump){
+			if(!this.is_jump && this.canFly()){
 				this.render.spine.state.setAnimationByName(0, 'jump', false);
 			}
 			this.is_jump = true;
@@ -219,7 +244,51 @@ Player = Entity.extend({
 			this.is_jump = false;
 		}
 	},
+	consumeFuel: function(task){
+		this.tempraturePool+=0.1;
+		switch (task) {
+		    case 0: // DIGGING
+		        this.fuel-=0.5;
+		    case 1: // JET ENGINE
+		        this.fuel-=1;
+		}
+		if(this.fuel<=0){
+			this.fuel = 0;
+		}
+	},
+	doDamage: function(impulse){
+		if(this.health==0){return false;}
+		var delta = Math.floor(impulse*2.2);
+		this.health -= delta;
+
+		if(this.health<=1){
+			this.health = 0;
+			this.tempraturePool+=1000;
+			this.markForDeath = true;
+		}
+	},
+	updateTemprature: function(){
+		this.tempraturePool-=0.005;
+		if(this.tempraturePool<=0){
+			this.tempraturePool = 0;
+		}
+		return ((Math.exp(this.depth/1000) / 10) * 360 + this.tempraturePool).toFixed(2);
+	},
+	kill: function(){
+		var _self = this;
+		this.fuel = 0;
+		setTimeout(function(){
+			_self.render.spine.state.setAnimationByName(0, 'death', false);
+			_self.expAnim();
+			console.log("DEATH")
+		}, 55);
+		this.markForDeath = false;
+	},
 	update: function(){
+		this.temprature = this.updateTemprature();
+		if(this.temprature>this.maxTemprature){
+			this.doDamage(this.temprature/80);
+		}
 		//console.log(this.state);
 		this.anim();
 		var position = this.physBody.GetPosition();

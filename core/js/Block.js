@@ -47,6 +47,8 @@ Block = Entity.extend({
 		var u = body?body.GetUserData():null;
 		if(u!==null){
 			if(u.id=="player"){
+
+				
 				if(impulse>1){
 					audio_engine.playSound("land1");
 				}
@@ -55,6 +57,10 @@ Block = Entity.extend({
 						u.ent.diggAnim();
 						this.doDamage();
 					}
+				}
+				if(impulse > 14){
+					u.ent.doDamage(impulse);
+					this.doDamage(impulse*1.8);
 				}
 			}
 		}

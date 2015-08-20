@@ -360,7 +360,7 @@ WorldEngine = Class.extend({
 				if(relative_x<0 || relative_x>max_x){continue;}
 				if(relative_y<0 || relative_y >max_y){continue;}
 				// create pit hole
-				if(relative_x>20 && relative_x<23){continue;}
+				if(relative_x>55 && relative_x<60){continue;}
 				// add block
 				blocks.push({'x':relative_x, 'y':relative_y, 'active': active});
 			};
