@@ -1,6 +1,7 @@
 GameEngine = Class.extend({
 	entities: [],
 	player: null,
+	score: 0,
 	tick: 0,
 	_lasthudtick: 0,
 	init: function () {
@@ -18,7 +19,7 @@ GameEngine = Class.extend({
 		this.contactListeners();
 		// Debug Mode
 		if(Config.DEBUG){
-			physics_engine.debug(document.getElementById("debug_canvas").getContext("2d"),12);
+			physics_engine.debug(document.getElementById("debug_canvas").getContext("2d"), 7);
 		}
 
 		var total_possible_blocks = (Config.MAX_CHUNKS_SIZE.X*Config.CHUNK_SIZE) * (Config.MAX_CHUNKS_SIZE.Y*Config.CHUNK_SIZE);
@@ -104,6 +105,20 @@ GameEngine = Class.extend({
 		var speed = 0.3;
 		this.player.physBody.SetAngularVelocity(0);
 		var vel = this.player.physBody.GetLinearVelocity();
+		
+		var limit_speed = 5;
+		// limit
+		if(vel.x > limit_speed){
+			vel.x = limit_speed;
+		}
+		if(vel.x < -limit_speed){
+			vel.x = -limit_speed;
+		}
+
+		if(this.player.isDead){
+			return false;
+		}
+
 		// up/down arrow
 		if (input_engine.state('move-up')){
 			if(this.player.canFly()){
@@ -114,6 +129,7 @@ GameEngine = Class.extend({
 		if (input_engine.state('move-down')){
 			vel.y+=speed;	
 		}
+
 		// left/right arrows
 		if (input_engine.state('move-left')){
 			vel.x-=speed;
@@ -122,14 +138,6 @@ GameEngine = Class.extend({
 			vel.x+=speed;
 		}
 
-		var limit_speed = 5;
-		// limit
-		if(vel.x > limit_speed){
-			vel.x = limit_speed;
-		}
-		if(vel.x < -limit_speed){
-			vel.x = -limit_speed;
-		}
 	},
 	get_player_depth: function(){
 		var depth = Math.floor((Math.ceil(this.player.pos.y) - 768)/10);
@@ -137,7 +145,7 @@ GameEngine = Class.extend({
 		return depth
 	},
 	updateHUD: function(){
-		var hudtick = Math.floor(this.tick/60);
+		var hudtick = Math.floor(this.tick/15);
 		if(hudtick>this._lasthudtick){
 			// player health
 			var health = this.player.health+"%";
@@ -164,6 +172,11 @@ GameEngine = Class.extend({
 				depth = depth + "m";
 			}
 			$("#depth").text(depth);
+
+			// cash
+			$("#score").text(this.score);
+			// score
+			$("#cash").text(this.player.cash+" $");
 
 			this._lasthudtick = hudtick;
 		}

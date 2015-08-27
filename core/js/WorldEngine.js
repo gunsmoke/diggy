@@ -27,13 +27,14 @@ WorldData = Class.extend({
 	},
 	getBlockThreshold: function(y){
 		if(y<14) return [1];
-		if(y<30) return [2,2,2,2,2,4,5];
-		if(y<80) return [2,2,3,3,3,4,5,6];
-		if(y<300) return [0,0,0,0,0,2,3,3,3,3,3,3,3,3,3,6];
-		if(y<1200) [0,0,0,0,0,3,3,3,3,3,3,3,3,3,3,3,5,5,5,5,5,6,6,6,6,7];
-		if(y<2200) [0,0,0,0,0,3,3,3,3,3,3,3,3,3,3,3,5,5,5,5,5,7];
-		if(y<3200) [0,0,0,0,0,3,3,3,3,3,3,3,5,5,5,6];
-		return [0,0,0,0,0,0,0,0,0,0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,7,7,7];
+		if(y<30) return [2,2,2,2,2,4,5,10];
+		if(y<80) return [0,0,0,0,2,2,3,3,3,3,3,4,4,4,4,4,5,6,10,11,11];
+		if(y<300) return [0,0,0,0,0,2,3,3,3,3,5,5,5,6,10,11,11,11,12];
+		if(y<800) return [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,3,3,3,3,3,3,3,3,6,10,11,11,11,12,13,14,14,15,15];
+		if(y<1200) return [0,0,0,0,0,3,3,3,3,3,3,3,3,3,3,3,5,5,5,5,5,6,6,6,6,7,10,11,11,11,11,11,11,11,11,11,12,12,12,13,13,14];
+		if(y<2200) return [0,0,0,0,0,3,3,3,3,3,3,3,3,3,3,3,5,5,5,5,5,7,13,13,13,13,13,14,14,14,14,15,15,15];
+		if(y<3200) return [0,0,0,0,0,3,3,3,3,3,3,3,5,5,5,6,14,14,14,14,15,15,15,15,15,15,15,15,15,15];
+		return [0,0,0,0,0,0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,7,7,7,13,13,13,13,13,13,13,13,13,14,14,14,14,14,14,14,14,14,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15];
 	},
 	getSecureBlocks: function(y){
 		var result = this.getBlockThreshold(y);
@@ -76,13 +77,39 @@ WorldData = Class.extend({
 				block = new Gravel(x,y);
 				break;
 			case 6:
-				block = new Water(x,y);
+				block = new Stone(x,y);
+				//block = new Water(x,y);
 				break;
 			case 7:
 				block = new Lava(x,y);
 				break;
 			case 8:
 				block = new BedRock(x,y);
+				break;
+			case 10:
+				block = new Coal(x,y);
+				break;
+			case 11:
+				block = new Iron(x,y);
+				break;
+			case 12:
+				block = new Gold(x,y);
+				break;
+			case 13:
+				block = new Emerald(x,y);
+				break;
+			case 14:
+				block = new Lapis(x,y);
+				break;
+			case 15:
+				block = new Diamond(x,y);
+				break;
+			// SHOPS
+			case 100:
+				block = new SellShop(x,y);
+				break;
+			case 101:
+				block = new FuelShop(x,y);
 				break;
 			default:
 				block = new Void(x,y);
@@ -175,10 +202,26 @@ WorldChunk = Class.extend({
 					if(x<min_x || x>max_x){
 						block=-1;
 					}
+				} else if(y<14){
+					var tx = min_x+50;
+					if(x==tx){
+						block=100;
+					}
+					if(x==tx-1 || x==tx+1){
+						block=0;
+					}
+
+					var tx = min_x+45;
+					if(x==tx){
+						block=101;
+					}
+					if(x==tx-1 || x==tx+1){
+						block=0;
+					}
 				}
 				
 				// create bounds
-				if(y<1){block=-1;} // sky
+				if(y<2){block=-1;} // sky
 				if(y>max_y){block=8;} // floor
 
 				world_data.set(x,y,block);
@@ -360,7 +403,7 @@ WorldEngine = Class.extend({
 				if(relative_x<0 || relative_x>max_x){continue;}
 				if(relative_y<0 || relative_y >max_y){continue;}
 				// create pit hole
-				if(relative_x>55 && relative_x<60){continue;}
+				//if(relative_x>55 && relative_x<60){continue;}
 				// add block
 				blocks.push({'x':relative_x, 'y':relative_y, 'active': active});
 			};
@@ -489,6 +532,28 @@ WorldEngine = Class.extend({
 	},
 	addDebry: function(debry){
 		this.entities.push(debry);
+	},
+	createRandomItem: function(block){
+		if(Math.random()<0.99){return false;}
+		if(block.pos.y < 15){return false;}
+		if(block.type<=0){return false;}
+
+		//items = ['copper', 'silver', 'gold', 'platinum', 'iron', 'coal', 'trash', 'diamonds', 'ruby', 'emerald']
+		var items = [0,1];
+		var item_type = items[Math.floor(Math.random()*items.length)];
+		var item = this.itemFactory(item_type);
+		console.log(item);
+	},
+	itemFactory: function(item_type){
+		var item = null;
+		switch(item_type){
+			case 0: // Trash
+				item = new TrashItem();
+				break;
+			default:
+				item = null;
+		}
+		return item;
 	}
 });
 

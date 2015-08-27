@@ -10,6 +10,9 @@ Player = Entity.extend({
 	temprature: 36,
 	tempraturePool: 0,
 	maxTemprature: 46,
+	cargo: [],
+	cargoMax: 10,
+	cash: 50,
 	isDead:false,
 	state: {},
 	digging: false,
@@ -39,6 +42,13 @@ Player = Entity.extend({
 
 		this.diggingAnimation();
 		this.rocketAnimation();
+	},
+	addCargo: function(item){
+		if(this.cargo.length>=this.cargoMax){
+			return false; // CARGO IS FULL
+		}
+
+		this.cargo.push(item);
 	},
 	rocketAnimation: function(){
 		this.emitters.rocket = new Proton.BehaviourEmitter();
@@ -99,6 +109,7 @@ Player = Entity.extend({
 	},
 	expAnim: function(){
 		var _self = this;
+		this.render.spine.state.setAnimationByName(0, 'death', false);
 		// create an array to store the textures
 		audio_engine.playSound("exp");
 		this.render.explosion.alpha = 1;
@@ -278,10 +289,9 @@ Player = Entity.extend({
 		var _self = this;
 		this.fuel = 0;
 		setTimeout(function(){
-			_self.render.spine.state.setAnimationByName(0, 'death', false);
 			_self.expAnim();
-			console.log("DEATH")
 		}, 55);
+		this.isDead = true;
 		this.markForDeath = false;
 	},
 	update: function(){

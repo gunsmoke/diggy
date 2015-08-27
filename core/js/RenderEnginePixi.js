@@ -127,12 +127,6 @@ BlockRender = Class.extend({
 			var color = "0x"+entityDef.color.substr(1);
 		}
 
-		//this.sprite = PIXI.Sprite.fromImage("assets/textures/blocks/"+entityDef.asset+".png");
-
-		//var texture = PIXI.Texture.fromImage("assets/textures/blocks/"+entityDef.asset+".png");
-		
-		//this.sprite = new PIXI.extras.TilingSprite(texture, 64, 64);
-
 
 		this.setPosition({
 			x: entityDef.x*this.block_size,
@@ -178,6 +172,46 @@ BlockRender = Class.extend({
 	},
 	remove: function(){
 		var layer = render_engine.getLayer("blocks");
+		layer.container.removeChild(this.graphics);
+		this.graphics = null;
+	},
+	setOpacity: function(opacity){
+		this.graphics.alpha = opacity;
+	}
+});
+
+ShopRender = Class.extend({
+	graphics: null,
+	sprite: null,
+	block_size: 64,
+	init: function(entityDef){
+		this.graphics = new PIXI.Container();
+
+		var offset = this.block_size/2;
+
+		if(entityDef.asset!=null){	
+			this.sprite = new PIXI.Sprite();
+			this.sprite.texture = loader.resources[entityDef.asset].texture;
+			this.sprite.anchor.x = this.sprite.anchor.y = 0.5;
+			this.sprite.scale.x = this.sprite.scale.y = Config.TEXTURE_PACK_SCALE;
+		}
+
+
+		this.setPosition({
+			x: entityDef.x*this.block_size,
+			y: (entityDef.y*this.block_size)-93
+		})
+
+
+		if(entityDef.asset!=null){
+			this.graphics.addChild(this.sprite);
+		}
+	},
+	setPosition: function(pos){
+		this.graphics.position = new PIXI.Point(pos.x,pos.y);
+	},
+	remove: function(){
+		var layer = render_engine.getLayer("shops");
 		layer.container.removeChild(this.graphics);
 		this.graphics = null;
 	},
@@ -601,6 +635,7 @@ RenderEngine = Class.extend({
 		this.stage.addChild(this.particles);
 
 
+		this.addLayer("shops");
 		this.addLayer("player");
 		this.addLayer("debry");
 		this.addLayer("blocks");
@@ -696,6 +731,12 @@ RenderEngine = Class.extend({
 		var block = new BlockRender(entityDef, color);
 		block_layer.add(block);
 		return block;
+	},
+	addShop: function(entityDef, color){
+		var shop_layer = this.getLayer("shops");
+		var shop = new ShopRender(entityDef, color);
+		shop_layer.add(shop);
+		return shop;
 	},
 	addFluid: function(entityDef, color){
 		var block_layer = this.getLayer("blocks");

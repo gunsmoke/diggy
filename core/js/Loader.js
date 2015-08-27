@@ -13,6 +13,8 @@ loader.add('cloud1', "assets/img/cloud1.png");
 loader.add('cloud2', "assets/img/cloud2.png");
 loader.add('cloud3', "assets/img/cloud3.png");
 loader.add('underground', "assets/img/underground.jpg");
+loader.add('sellshop', "assets/img/sellshop.png");
+loader.add('fuelshop', "assets/img/fuelshop.png");
 
 // SOUND ASSETS
 audio_loader.add('thrust', "assets/sounds/thrust.mp3");

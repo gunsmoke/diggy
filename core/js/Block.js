@@ -23,9 +23,14 @@ Block = Entity.extend({
 	debryAmount:2.7,
 	color: null,
 	asset: null,
+	item: null,
+	score_multiplier: 0.6,
 	init: function(inputx, inputy, settings) {
 		this._super(inputx, inputy, settings);
 		this.pos = {x:inputx, y:inputy};
+
+
+		//world_engine.createRandomItem(this);
 	},
 	getEntityDef: function(){
 		return {
@@ -55,22 +60,26 @@ Block = Entity.extend({
 				if(impulse>0.35){
 					if(u.ent.isDigging()){
 						u.ent.diggAnim();
-						this.doDamage();
+						this.doDamage(0.8, u.ent);
 					}
 				}
 				if(impulse > 14){
 					u.ent.doDamage(impulse);
-					this.doDamage(impulse*1.8);
+					this.doDamage(impulse*1.8, u.ent);
 				}
 			}
 		}
 		
 	},
-	doDamage: function(amount){
+	doDamage: function(amount, who){
 		var max_x = Config.MAX_CHUNKS_SIZE.X*Config.CHUNK_SIZE-Config.BOUND_SIZE;
 		var min_x = Config.BOUND_SIZE;
 		if(this.pos.x<min_x || this.pos.x>max_x){return false;}
+
 		if(this.health<=0){
+			if(who!=undefined){
+				game_engine.score += Math.floor(this.pos.y * this.score_multiplier);
+			}
 			this.markForDeath = true;
 		}
 		this.takeDamage(amount);
@@ -206,6 +215,7 @@ Stone = Block.extend({
 	asset: 'stone',
 	health: 200,
 	maxHealth: 200,
+	score_multiplier: 0.8,
 	init: function(inputx, inputy, settings) {
 		this._super(inputx, inputy, settings);
 	},
@@ -255,6 +265,73 @@ Gravel = GravityBlock.extend({
 	},
 });
 
+/*******************************************************************/
+/**RESOURCES BLOCKS**/
+/*******************************************************************/
+ResourceBlock = Block.extend({
+	color: '#5E5748',
+	init: function(inputx, inputy, settings) {
+		this._super(inputx, inputy, settings);
+	},
+	kill: function(){
+		// ADD to player cargo
+		game_engine.player.addCargo(this.type);
+		// spawn debry at current position
+		this.createDebry();
+		// kill it with fire
+		this.disable();
+		this.remove();
+		this.markForDeath = false;
+	},
+});
+
+Coal = ResourceBlock.extend({
+	type: 10,
+	asset: 'coal_ore',
+	init: function(inputx, inputy, settings) {
+		this._super(inputx, inputy, settings);
+	},
+});
+
+Iron = ResourceBlock.extend({
+	type: 11,
+	asset: 'iron_ore',
+	init: function(inputx, inputy, settings) {
+		this._super(inputx, inputy, settings);
+	},
+});
+
+Gold = ResourceBlock.extend({
+	type: 12,
+	asset: 'gold_ore',
+	init: function(inputx, inputy, settings) {
+		this._super(inputx, inputy, settings);
+	},
+});
+
+Emerald = ResourceBlock.extend({
+	type: 13,
+	asset: 'emerald_ore',
+	init: function(inputx, inputy, settings) {
+		this._super(inputx, inputy, settings);
+	},
+});
+
+Lapis = ResourceBlock.extend({
+	type: 14,
+	asset: 'lapis_ore',
+	init: function(inputx, inputy, settings) {
+		this._super(inputx, inputy, settings);
+	},
+});
+
+Diamond = ResourceBlock.extend({
+	type: 15,
+	asset: 'diamond_ore',
+	init: function(inputx, inputy, settings) {
+		this._super(inputx, inputy, settings);
+	},
+});
 /*******************************************************************/
 /**FLUID BLOCKS**/
 /*******************************************************************/
