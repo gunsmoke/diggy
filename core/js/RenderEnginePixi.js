@@ -593,6 +593,36 @@ RenderFog = Class.extend({
 	}
 });
 
+RenderText = Class.extend({
+	graphics: null,
+	completed: false,
+	init: function(text){
+		var style = {
+		    font : 'bold 36px Arial',
+		    fill : '#FFFFFF',
+		    align: 'center',
+		    stroke : '#333333',
+		    strokeThickness : 4,
+		    dropShadow : true,
+		    dropShadowColor : '#000000',
+		    dropShadowAngle : Math.PI / 2,
+		    dropShadowDistance : 5,
+		    wordWrap : true,
+		    wordWrapWidth : 240
+		};
+
+		this.graphics = new PIXI.Text(text, style);
+
+	},
+	update: function(){
+		if(this.graphics.alpha<=0){
+			this.completed = true;
+			return false;
+		}
+		this.graphics.y-=3;
+		this.graphics.alpha-=0.02;
+	}
+});
 
 RenderLayer = Class.extend({
 	container: null,

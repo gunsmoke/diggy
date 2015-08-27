@@ -58,6 +58,7 @@ Shop = Entity.extend({
 
 SellShop = Shop.extend({
 	asset: 'sellshop',
+	text_stack: new Array(),
 	onTouch: function(body, impulse) {
 		var u = body?body.GetUserData():null;
 		if(u!==null){
@@ -86,14 +87,49 @@ SellShop = Shop.extend({
 	},
 	buyFrom: function(player){
 		if(game_engine.tick - this.last_pur_tick < 10){return false;} // RATE LIMIT
+
 		if(player.cargo.length>0){
 			var item = player.cargo.pop();
 			var value = this.itemsValue(item);
 			player.cash+=value;
 			game_engine.score+=value*2;
+			this.createText(item);
 		}
 		this.last_pur_tick = game_engine.tick;
 	},
+	createText: function(item){
+		if(this.render==null) return;
+		var label = "";
+		if(item==10){label="Coal";}
+		if(item==11){label="Iron";}
+		if(item==12){label="Gold";}
+		if(item==13){label="Emerald";}
+		if(item==14){label="Lapis";}
+		if(item==15){label="Diamond";}
+		var text = new RenderText("1x "+ label);
+		text.graphics.x = -70;
+		text.graphics.y = -30;
+		this.addText(text);
+	},
+	addText: function(text){
+		if(this.render==null) return;
+		this.text_stack.push(text)
+		this.render.graphics.addChild(text.graphics);
+	},
+	update: function(){
+		if(this.render==null) return;
+		var clear = new Array();
+		for (var i = 0; i < this.text_stack.length; i++) {
+			this.text_stack[i].update();
+			if(this.text_stack[i].completed){
+				clear.push(i);
+			}
+		};
+		for (var i = 0; i < clear.length; i++) {
+			this.render.graphics.removeChild(this.text_stack[clear[i]]);
+			this.text_stack.splice(clear[i], 1);
+		};
+	}
 });
 
 FuelShop = Shop.extend({
