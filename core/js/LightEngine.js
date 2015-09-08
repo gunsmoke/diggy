@@ -71,6 +71,7 @@ LightEngine = Class.extend({
 	lights: new Array(),
 	context: null,
     offset: {"x":0, "y":0},
+    _lastlightick: 0,
 	init: function(){
 		// add lights to the build
 	},
@@ -88,6 +89,12 @@ LightEngine = Class.extend({
     	return light;
     },
 	update: function(){
+		var lightick = Math.floor(game_engine.tick/2);
+		if(lightick>this._lastlightick){
+			this._lastlightick=lightick;
+		} else {
+			return false;
+		}
 		for(var i = 0; i < this.lights.length; i++){
     		this.lights[i].begin();
 			for(var curAngle = 0; curAngle < Math.PI*2; curAngle += (Math.PI / 90)){

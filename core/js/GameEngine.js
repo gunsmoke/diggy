@@ -150,7 +150,6 @@ GameEngine = Class.extend({
 			// player health
 			var health = this.player.health * 100 / this.player.maxHealth;
 			$("#health .progress-bar").width(health+"%").text(this.player.health);
-			this._lasthudtick = hudtick;
 
 			// player fuel
 			var fuel = Math.floor(this.player.fuel * 100 / this.player.maxFuel) + "%";
