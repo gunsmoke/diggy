@@ -16,7 +16,7 @@ ConfigClass = Class.extend({
 	DRAW_RATIO: 1,
 	LIGHTS: true,
 	DEBUG: false,
-	SEED: "13",
+	SEED: "dengun",
 	TEXTURE_PACK_SCALE: 0.50,
 	TEXTURE_PACK: 'packs/high'
 });

@@ -19,6 +19,9 @@ Player = Entity.extend({
 	touching_block: false,
 	emitters: {},
 	zIndex: 1,
+	text_stack: new Array(),
+	fuel_warning: false,
+	cargo_warning: false,
 	init: function(inputx, inputy, settings) {
 		this._super(inputx, inputy, settings);
 		var entityDef = {
@@ -43,12 +46,22 @@ Player = Entity.extend({
 		this.diggingAnimation();
 		this.rocketAnimation();
 	},
+	cargo_sum: function(){
+		return _.reduce(this.cargo, function(memo, o){ return memo + o['quantity']; }, 0);
+	},
 	addCargo: function(item){
-		if(this.cargo.length>=this.cargoMax){
+		if(this.cargo_sum()>=this.cargoMax){
+			this.createText("Cargo Full");
 			return false; // CARGO IS FULL
 		}
-
-		this.cargo.push(item);
+		var o = _.find(this.cargo, function(o){ return o['item'] == item; });
+		if(o!=undefined){
+			o['quantity']++;
+		} else {
+			var object = {'item': item, 'quantity': 1}
+			this.cargo.push(object);
+		}
+		return true;
 	},
 	rocketAnimation: function(){
 		this.emitters.rocket = new Proton.BehaviourEmitter();
@@ -90,13 +103,13 @@ Player = Entity.extend({
 		
 		this.emitters.smoke.addSelfBehaviour(new Proton.RandomDrift(40, 20, .5));
 
-		this.emitters.debry.rate = new Proton.Rate(new Proton.Span(1, 5), new Proton.Span(0.1));
+		this.emitters.debry.rate = new Proton.Rate(new Proton.Span(1, 5), new Proton.Span(0.2));
 		this.emitters.debry.addInitialize(new Proton.Mass(1));
 		this.emitters.debry.addInitialize(new Proton.ImageTarget(loader.resources.debry.texture));
 		this.emitters.debry.addInitialize(new Proton.Life(0.1, 0.6));
 		this.emitters.debry.addInitialize(new Proton.Velocity(new Proton.Span(1, 1), new Proton.Span(1, 42, true), 'polar'));
 
-		this.emitters.debry.addBehaviour(new Proton.Gravity(3));
+		this.emitters.debry.addBehaviour(new Proton.Gravity(-2));
 		this.emitters.debry.addBehaviour(new Proton.Scale(new Proton.Span(0.01, 0.08), 0.5));
 		this.emitters.debry.addBehaviour(new Proton.Alpha(1, 0.15));
 		this.emitters.debry.addBehaviour(new Proton.Rotate(0, Proton.getSpan(-2, 3), 'add'));
@@ -120,13 +133,13 @@ Player = Entity.extend({
 	},
 	diggAnim: function(){
 		if(this.emitters.debry.emitTime>0.60){
-			audio_engine.playSound("drill");
 			this.tempraturePool+=0.13;
 			this.consumeFuel(0);
 			this.emitters.debry.emit(0.6);
 		}
-		if(this.emitters.smoke.emitTime>0.55){
-			this.emitters.smoke.emit(0.5);
+		if(this.emitters.smoke.emitTime>0.46){
+			audio_engine.playSound("drill");
+			this.emitters.smoke.emit(0.46);
 		}
 		
 	},
@@ -185,6 +198,14 @@ Player = Entity.extend({
 			} else {
 				this.state.digging = false;
 			}
+		}
+
+		var fuel = Math.floor(this.fuel * 100 / this.maxFuel);
+		if(fuel<=10 && !this.fuel_warning){
+			this.createText("Low Fuel");
+			this.fuel_warning = true;
+		} else if(fuel>10){
+			this.fuel_warning = false;
 		}
 	},
 	anim: function(){
@@ -294,6 +315,12 @@ Player = Entity.extend({
 		this.isDead = true;
 		this.markForDeath = false;
 	},
+	createText: function(message){
+		if(this.render==null) return;
+		var text = render_engine.addText(message);
+		text.graphics.x = this.pos.x-80;
+		text.graphics.y = this.pos.y-32;
+	},
 	update: function(){
 		this.temprature = this.updateTemprature();
 		if(this.temprature>this.maxTemprature){
@@ -310,7 +337,7 @@ Player = Entity.extend({
 		this.render.setPosition(this.pos);
 
 		this.emitters.smoke.p.x = this.emitters.debry.p.x = this.pos.x;
-		this.emitters.smoke.p.y = this.emitters.debry.p.y = this.pos.y;
+		this.emitters.smoke.p.y = this.emitters.debry.p.y = this.pos.y + 30;
 
 		this.emitters.rocket.p.x = this.pos.x;
 		this.emitters.rocket.p.y = this.pos.y + 12;
@@ -318,6 +345,5 @@ Player = Entity.extend({
 		this.light.setPosition(this.physBody.GetPosition());
 
 		this.stateMachine();
-
 	}
 });

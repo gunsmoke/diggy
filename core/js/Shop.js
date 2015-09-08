@@ -76,28 +76,30 @@ SellShop = Shop.extend({
 		}
 		
 	},
-	itemsValue: function(item){
-		if(item==10){ return 50; }
-		if(item==11){ return 100; }
-		if(item==12){ return 250; }
-		if(item==13){ return 500; }
-		if(item==14){ return 1000; }
-		if(item==15){ return 5000; }
+	itemsValue: function(item, quantity){
+		if(item==10){ return 50 * quantity; }
+		if(item==11){ return 100 * quantity; }
+		if(item==12){ return 250 * quantity; }
+		if(item==13){ return 500 * quantity; }
+		if(item==14){ return 1000 * quantity; }
+		if(item==15){ return 5000 * quantity; }
 		return 0;
 	},
 	buyFrom: function(player){
 		if(game_engine.tick - this.last_pur_tick < 10){return false;} // RATE LIMIT
 
 		if(player.cargo.length>0){
-			var item = player.cargo.pop();
-			var value = this.itemsValue(item);
+			var object = player.cargo.pop();
+			var item = object['item'];
+			var quantity = object['quantity'];
+			var value = this.itemsValue(item, quantity);
 			player.cash+=value;
 			game_engine.score+=value*2;
-			this.createText(item);
+			this.createText(item, quantity);
 		}
 		this.last_pur_tick = game_engine.tick;
 	},
-	createText: function(item){
+	createText: function(item, quantity){
 		if(this.render==null) return;
 		var label = "";
 		if(item==10){label="Coal";}
@@ -106,34 +108,16 @@ SellShop = Shop.extend({
 		if(item==13){label="Emerald";}
 		if(item==14){label="Lapis";}
 		if(item==15){label="Diamond";}
-		var text = new RenderText("1x "+ label);
-		text.graphics.x = -70;
-		text.graphics.y = -30;
-		this.addText(text);
-	},
-	addText: function(text){
-		if(this.render==null) return;
-		this.text_stack.push(text)
-		this.render.graphics.addChild(text.graphics);
-	},
-	update: function(){
-		if(this.render==null) return;
-		var clear = new Array();
-		for (var i = 0; i < this.text_stack.length; i++) {
-			this.text_stack[i].update();
-			if(this.text_stack[i].completed){
-				clear.push(i);
-			}
-		};
-		for (var i = 0; i < clear.length; i++) {
-			this.render.graphics.removeChild(this.text_stack[clear[i]]);
-			this.text_stack.splice(clear[i], 1);
-		};
+		var text = render_engine.addText(quantity+"x "+ label);
+		text.graphics.x = game_engine.player.pos.x-70;
+		text.graphics.y = game_engine.player.pos.y-32;
+		audio_engine.playSound("collect");
 	}
 });
 
 FuelShop = Shop.extend({
 	asset: 'fuelshop',
+	text_stack: new Array(),
 	onTouch: function(body, impulse) {
 		var u = body?body.GetUserData():null;
 		if(u!==null){
@@ -153,15 +137,26 @@ FuelShop = Shop.extend({
 	},
 	refuel: function(player){
 		if(game_engine.tick - this.last_pur_tick < 10){return false;} // RATE LIMIT
-		var fuel_price = 10;
-		if(player.fuel<player.maxFuel && player.cash>=fuel_price){
-			player.fuel+=20;
+		var fuel_price = 1;
+		var fuel_price_quantity = 20;
+		var fuel_quantity = player.maxFuel/fuel_price_quantity;
+		var fuel_cost = parseFloat(Math.round((fuel_quantity*fuel_price) * 100) / 100).toFixed(2);
+		if(player.fuel<player.maxFuel && player.cash>=fuel_cost){
+			player.fuel+=fuel_quantity;
 			if(player.fuel>player.maxFuel){
 				player.fuel = player.maxFuel;
 			}
-			player.cash-=fuel_price;
-			game_engine.score+=50;
+			player.cash-=fuel_cost;
+			game_engine.score+=fuel_quantity*5;
+			this.createText(fuel_cost);
 		}
 		this.last_pur_tick = game_engine.tick;
+	},
+	createText: function(cost){
+		if(this.render==null) return;
+		var text = render_engine.addText("-"+ cost + "$");
+		text.graphics.x = game_engine.player.pos.x-52;
+		text.graphics.y = game_engine.player.pos.y-32;
+		audio_engine.playSound("refuel");
 	}
 });

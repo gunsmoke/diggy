@@ -148,12 +148,12 @@ GameEngine = Class.extend({
 		var hudtick = Math.floor(this.tick/15);
 		if(hudtick>this._lasthudtick){
 			// player health
-			var health = this.player.health+"%";
-			$("#health .progress-bar").width(health).text(health);
+			var health = this.player.health * 100 / this.player.maxHealth;
+			$("#health .progress-bar").width(health+"%").text(this.player.health);
 			this._lasthudtick = hudtick;
 
 			// player fuel
-			var fuel = this.player.fuel+"%";
+			var fuel = Math.floor(this.player.fuel * 100 / this.player.maxFuel) + "%";
 			$("#fuel .progress-bar").width(fuel).text(fuel);
 
 			// player temprature
@@ -172,6 +172,14 @@ GameEngine = Class.extend({
 				depth = depth + "m";
 			}
 			$("#depth").text(depth);
+
+			// player cargo
+			var cargo = this.player.cargo_sum();
+			var pcargo = Math.ceil(cargo/this.player.cargoMax*100);
+			if(pcargo>100){
+				pcargo = 100;
+			}
+			$("#cargo .progress-bar").width(pcargo+"%").text(pcargo+"%");
 
 			// cash
 			$("#score").text(this.score);

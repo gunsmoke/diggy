@@ -22,3 +22,5 @@ audio_loader.add('drill', "assets/sounds/drill.mp3");
 audio_loader.add('dirt1', "assets/sounds/dirt1.mp3");
 audio_loader.add('land1', "assets/sounds/land1.mp3");
 audio_loader.add('exp', "assets/sounds/explosion.mp3");
+audio_loader.add('collect', "assets/sounds/collect.mp3");
+audio_loader.add('refuel', "assets/sounds/refuel.mp3");

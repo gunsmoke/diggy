@@ -646,6 +646,7 @@ RenderEngine = Class.extend({
 	renderer: null,
 	stage_size: {width: 460, height:680, scale:Config.SCALE},
 	particles: null,
+	text_stack: new Array(),
 	init: function () {},
 	build: function() {
 		this.stage = new PIXI.Container();
@@ -669,6 +670,7 @@ RenderEngine = Class.extend({
 		this.addLayer("player");
 		this.addLayer("debry");
 		this.addLayer("blocks");
+		this.addLayer("text");
 
 		//this.fog = new RenderFog();
 		//this.stage.addChild(this.fog.container);
@@ -780,6 +782,13 @@ RenderEngine = Class.extend({
 		debry_layer.add(debry);
 		return debry;
 	},
+	addText: function(msg){
+		var text_layer = this.getLayer("text");
+		var text = new RenderText(msg);
+		text_layer.add(text);
+		this.text_stack.push(text);
+		return text;
+	},
 	registerBody: function (entity) {
 		var entity = this.stage.add(entity);
 		return entity;
@@ -788,7 +797,22 @@ RenderEngine = Class.extend({
 		this.stage.DestroyBody(obj);
 		return null;
 	},
+	clearText: function(){
+		var clear = new Array();
+		var text_layer = this.getLayer("text");
+		for (var i = 0; i < this.text_stack.length; i++) {
+			this.text_stack[i].update();
+			if(this.text_stack[i].completed){
+				clear.push(i);
+			}
+		};
+		for (var i = 0; i < clear.length; i++) {
+			text_layer.remove(this.text_stack[clear[i]]);
+			this.text_stack.splice(clear[i], 1);
+		};
+	},
 	update:function(){
+		this.clearText();
 		this.renderer.render(this.stage);
 	}
 });

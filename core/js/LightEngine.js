@@ -90,7 +90,7 @@ LightEngine = Class.extend({
 	update: function(){
 		for(var i = 0; i < this.lights.length; i++){
     		this.lights[i].begin();
-			for(var curAngle = 0; curAngle < Math.PI*2; curAngle += (Math.PI / 180)){
+			for(var curAngle = 0; curAngle < Math.PI*2; curAngle += (Math.PI / 90)){
 	        	this.lights[i].rayCast(curAngle);
 	    	}
 	    	this.lights[i].end();
