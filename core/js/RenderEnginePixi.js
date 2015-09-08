@@ -531,66 +531,25 @@ LandscapeRender = Class.extend({
 	}
 });
 
-
-RenderFog = Class.extend({
-	container: null,
-	fog_top: null,
-	fog_right: null,
-	fog_bottom: null,
-	fog_left: null,
+FogRender = Class.extend({
+	graphics: null,
+	sprite: null,
 	init: function(){
-		this.container = new PIXI.Container();
-		this.container.position = new PIXI.Point(0,0);
+		this.graphics = new PIXI.Container();
 
-		this.fog_top = new PIXI.Graphics();
-		this.fog_right = new PIXI.Graphics();
-		this.fog_bottom = new PIXI.Graphics();
-		this.fog_left = new PIXI.Graphics();
-
-	
-		this.container.addChild(this.fog_top);
-		this.container.addChild(this.fog_right);
-		this.container.addChild(this.fog_bottom);
-		this.container.addChild(this.fog_left);
-
-		var blurFilter = new PIXI.filters.BlurFilter();
-		blurFilter.blur = 22;
-		this.container.filters = [blurFilter,]
-
-		//this.update();
+		this.sprite = new PIXI.Sprite();
+		this.sprite.texture = loader.resources.fog.texture;
+		this.sprite.anchor.x = this.sprite.anchor.y = 0.5;
+		this.sprite.scale.x = this.sprite.scale.y = 0.55;
+		this.sprite.position.x = 0;
+		this.sprite.position.y = 0;
+		this.graphics.alpha = 0;
+		this.graphics.addChild(this.sprite);
 	},
-	update: function(){
-		if(render_engine==null){return;}
-		var visible_area = Config.DRAW_DISTANCE/2*64-32 / render_engine.stage_size.scale;
-
-		var height = (render_engine.stage_size.height-visible_area)/2;
-		var width = (render_engine.stage_size.width-visible_area)/2;
-		//top
-		this.fog_top.clear();
-		this.fog_top.beginFill(0x000000);
-		this.fog_top.drawRect(0,0,render_engine.stage_size.width,height);
-		this.fog_top.endFill();
-		//top
-		this.fog_right.clear();
-		this.fog_right.beginFill(0x000000);
-		this.fog_right.drawRect(render_engine.stage_size.width-width,0,width,render_engine.stage_size.height);
-		this.fog_right.endFill();
-		//top
-		this.fog_bottom.clear();
-		this.fog_bottom.beginFill(0x000000);
-		this.fog_bottom.drawRect(0,render_engine.stage_size.height-height,render_engine.stage_size.width,height);
-		this.fog_bottom.endFill();
-		//top
-		this.fog_left.clear();
-		this.fog_left.beginFill(0x000000);
-		this.fog_left.drawRect(0,0,width,render_engine.stage_size.height);
-		this.fog_left.endFill();
-
-
-
-
-
-	}
+	setPosition: function(pos){
+        this.sprite.position.x = pos.x*64;
+        this.sprite.position.y = pos.y*64;
+    },
 });
 
 RenderText = Class.extend({
@@ -670,11 +629,8 @@ RenderEngine = Class.extend({
 		this.addLayer("player");
 		this.addLayer("debry");
 		this.addLayer("blocks");
+		this.addLayer("fog");
 		this.addLayer("text");
-
-		//this.fog = new RenderFog();
-		//this.stage.addChild(this.fog.container);
-
 
 		this.applyScale();
 	},
@@ -739,6 +695,12 @@ RenderEngine = Class.extend({
 		var light = new LightRender(entityDef);
 		light_layer.add(light);
 		return light;
+	},
+	addFog: function(){
+		var fog_layer = this.getLayer("fog");
+		var fog = new FogRender();
+		fog_layer.add(fog);
+		return fog;
 	},
 	buildBackground: function(){
 		var background_layer = this.getLayer("background");

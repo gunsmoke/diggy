@@ -2,6 +2,7 @@ Player = Entity.extend({
 	physBody: null,
 	render: null,
 	light: null,
+	fog: null,
 	depth: 0,
 	health: 100,
 	maxHealth: 100,
@@ -40,6 +41,7 @@ Player = Entity.extend({
 		this.physBody = physics_engine.addBody(entityDef);
 		this.light = light_engine.addLight(entityDef);
 
+		this.fog = render_engine.addFog();
 
 
 
@@ -342,7 +344,18 @@ Player = Entity.extend({
 		this.emitters.rocket.p.x = this.pos.x;
 		this.emitters.rocket.p.y = this.pos.y + 12;
 
-		this.light.setPosition(this.physBody.GetPosition());
+		if(position.y>13){
+			var alpha = (Math.exp((position.y-13)*.1)/3)-0.33;
+			if(alpha>1){alpha = 1;}
+			this.light.render.graphics.alpha=alpha;
+			this.fog.graphics.alpha=alpha;
+		} else {
+			this.light.render.graphics.alpha=0;
+			this.fog.graphics.alpha=0;
+		}
+
+		this.light.setPosition(position);
+		this.fog.setPosition(position);
 
 		this.stateMachine();
 	}
