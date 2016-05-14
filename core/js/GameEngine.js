@@ -29,6 +29,9 @@ GameEngine = Class.extend({
 
 		world_engine.follow(this.player);
 
+
+		this.shop_view = new ShopView();
+
 		// INPUTS
 		window.addEventListener('keydown', this.keydown, false);
     	window.addEventListener('keyup', this.keyup, false);
@@ -144,6 +147,12 @@ GameEngine = Class.extend({
 		if(depth<0){depth=0;}
 		return depth
 	},
+	open_shop: function(){
+		this.shop_view.open();
+	},
+	close_shop: function(){
+		this.shop_view.close();
+	},
 	updateHUD: function(){
 		var hudtick = Math.floor(this.tick/15);
 		if(hudtick>this._lasthudtick){
@@ -190,6 +199,7 @@ GameEngine = Class.extend({
 	},
 	update: function () {
 		this.player.update();
+		this.shop_view.update();
 		physics_engine.update();
 		world_engine.update();	
 		render_engine.update();
@@ -199,6 +209,7 @@ GameEngine = Class.extend({
 		this.player.depth = this.get_player_depth();
 		if(this.player.markForDeath){
 			console.log("GAME OVER")
+			render_engine.deadFilter();
 			this.player.kill();
 		}
 

@@ -634,6 +634,29 @@ RenderEngine = Class.extend({
 
 		this.applyScale();
 	},
+	grayFilter: function(){
+		var filter = new PIXI.filters.GrayFilter();
+		filter.gray = 1;
+		return filter;
+	},
+	blurFilter: function(){
+		var filter = new PIXI.filters.BlurFilter();
+		filter.blur = 5;
+		return filter;
+	},
+	shopFilter: function(){
+		this.clearFilter();
+		this.stage.filters = [this.grayFilter()];
+	},
+	deadFilter: function(){
+		this.clearFilter();
+		this.stage.filters = [this.grayFilter(), this.blurFilter()];
+		this.stage.alpha = 0.5;
+	},
+	clearFilter: function(){
+		this.stage.filters = null;
+		this.stage.alpha = 1;
+	},
 	setWidth: function(width){
 		this.stage_size.width = width;
 		this.renderer.resize(width,this.stage_size.height);

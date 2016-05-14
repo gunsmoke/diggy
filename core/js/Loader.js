@@ -15,6 +15,7 @@ loader.add('cloud3', "assets/img/cloud3.png");
 loader.add('underground', "assets/img/underground.jpg");
 loader.add('sellshop', "assets/img/sellshop.png");
 loader.add('fuelshop', "assets/img/fuelshop.png");
+loader.add('buyshop', "assets/img/buyshop.png");
 loader.add('fog', "assets/img/fog.png");
 
 // SOUND ASSETS

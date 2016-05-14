@@ -160,3 +160,171 @@ FuelShop = Shop.extend({
 		audio_engine.playSound("refuel");
 	}
 });
+
+
+BuyShop = Shop.extend({
+	asset: 'buyshop',
+	player_in_shop: false,
+	player_in_shop_c: 0,
+	onTouch: function(body, impulse) {
+		this.player_in_shop = false;
+		var u = body?body.GetUserData():null;
+		if(u!==null){
+			if(u.id=="player"){
+
+				
+				if(impulse>1){
+					audio_engine.playSound("land1");
+				}
+				
+				if(u.ent.is_idle && impulse<0.3){
+					this.player_in_shop = true;
+				}
+			}
+		}
+		
+	},
+	update: function(){
+		if(this.player_in_shop){
+			if(this.player_in_shop_c==12){
+				game_engine.open_shop();
+			}
+			this.player_in_shop_c++;
+		} else {
+			if(this.player_in_shop_c>0){
+				game_engine.close_shop();
+				this.player_in_shop_c=0;
+			} else {
+				this.player_in_shop_c=-1;
+			}
+		}
+		this.player_in_shop = false;
+	}
+});
+
+
+ShopService = Class.extend({
+	name: 'undefined',
+	cost: 0,
+	icon: '',
+	btn_color: 'primary',
+	$el: undefined,
+	init: function(settings) {
+		var _self = this;
+		this.button = $('<button class="btn btn-'+this.btn_color+' btn-lg btn-block" disable></button>')
+		this.$el = $('<div class="col-md-4"></div>');
+		this.button.on('click', function(){
+			_self.purshase();
+		});
+	},
+	render: function(){
+		this.button.html(this.name + ': <span>' + this.cost + '</span>$');
+		this.$el.append(this.button);
+		return this;
+	},
+	purshase: function(){
+		game_engine.player.cash-=this.cost;
+		var text = render_engine.addText("-"+ this.cost + "$");
+		text.graphics.x = game_engine.player.pos.x-52;
+		text.graphics.y = game_engine.player.pos.y-32;
+	},
+	update: function(){
+		if(this.cost>0){
+			this.button.attr("disabled", false);
+		} else {
+			this.button.attr("disabled", true);
+		}
+		this.button.find('span').text(this.cost);
+	}
+});
+
+RepairService = ShopService.extend({
+	name: 'Repair',
+	btn_color: 'success',
+	purshase: function(){
+		if(game_engine.player.cash<this.cost){
+			return false;
+		}
+		this._super();
+		game_engine.player.health = game_engine.player.maxHealth;
+	},
+	update: function(){
+		this._super();
+		// 1 hp = 3 bucks ?
+		var health_price = 2;
+		var health_left = game_engine.player.maxHealth - game_engine.player.health;
+		this.cost = (health_left * health_price).toFixed(2);
+	}
+});
+
+RefuelService = ShopService.extend({
+	name: 'Refuel',
+	purshase: function(){
+		if(game_engine.player.cash<this.cost){
+			return false;
+		}
+		this._super();
+		game_engine.player.fuel = game_engine.player.maxFuel;
+		audio_engine.playSound("refuel");
+	},
+	update: function(){
+		this._super();
+		var fuel_price = 1;
+		var fuel_left = game_engine.player.maxFuel - game_engine.player.fuel;
+		this.cost = (fuel_left * fuel_price).toFixed(2);
+	}
+});
+
+ShopView = Class.extend({
+	is_opened: false,
+	init: function() {
+		this.is_opened = false;
+		this.services = [
+			new RepairService(),
+			new RefuelService(),
+		];
+
+		this.components = [
+			new DrillComponent(),
+			new FuelComponent(),
+			new HullComponent(),
+			new CoolantComponent(),
+			new CargoComponent(),
+			new RadarComponent(),
+		];
+
+		var _self = this;
+		$('#store-modal').on('hide.bs.modal', function (e) {
+			_self.is_opened = false;
+		});
+		$('#store-modal').on('show.bs.modal', function (e) {
+			_self.is_opened = true;
+		});
+
+		this.render();
+	},
+	open: function(){
+		console.log("OPEN SHOP");
+		$('#store-modal').modal('show');
+	},
+	close: function(){
+		console.log("CLOSE SHOP");
+		$('#store-modal').modal('hide');
+	},
+	render: function(){
+		for (var i = 0; i < this.services.length; i++) {
+			$('#store-modal .services').append(this.services[i].render().$el);
+		};
+
+		for (var i = 0; i < this.components.length; i++) {
+			$('#store-modal .components').append(this.components[i].render().$el);
+		};
+	},
+	update: function(){
+		if(this.is_opened){
+			for (var i = 0; i < this.services.length; i++) {
+				this.services[i].update();
+			};
+		}
+	}
+});

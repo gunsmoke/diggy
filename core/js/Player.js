@@ -20,6 +20,8 @@ Player = Entity.extend({
 	touching_block: false,
 	emitters: {},
 	zIndex: 1,
+	damageModifier: 1,
+	radarModifier: 2.5,
 	text_stack: new Array(),
 	fuel_warning: false,
 	cargo_warning: false,
@@ -203,10 +205,10 @@ Player = Entity.extend({
 		}
 
 		var fuel = Math.floor(this.fuel * 100 / this.maxFuel);
-		if(fuel<=10 && !this.fuel_warning){
+		if(fuel<=25 && !this.fuel_warning){
 			this.createText("Low Fuel");
 			this.fuel_warning = true;
-		} else if(fuel>10){
+		} else if(fuel>25){
 			this.fuel_warning = false;
 		}
 	},
@@ -306,7 +308,11 @@ Player = Entity.extend({
 		if(this.tempraturePool<=0){
 			this.tempraturePool = 0;
 		}
-		return ((Math.exp(this.depth/1000) / 10) * 360 + this.tempraturePool).toFixed(2);
+		var temp = ((Math.exp(this.depth/Config.MAX_DEPTH) / 10) * 360 + this.tempraturePool).toFixed(2);
+		if(temp>7000){
+			temp = 7000;
+		}
+		return temp;
 	},
 	kill: function(){
 		var _self = this;
@@ -345,13 +351,23 @@ Player = Entity.extend({
 		this.emitters.rocket.p.y = this.pos.y + 12;
 
 		if(position.y>13){
-			var alpha = (Math.exp((position.y-13)*.1)/3)-0.33;
+			var alpha = (Math.round(Math.exp((position.y-13)/30) * 100) / 100)-1
 			if(alpha>1){alpha = 1;}
+			var sdelta = (Math.round(Math.exp((position.y-13)/40) * 100) / 100)-1
+			if(sdelta>1){sdelta = 1;}
+			var cs = this.radarModifier;
+			var scale = (cs-1.5)*sdelta + 1.5;
 			this.light.render.graphics.alpha=alpha;
-			this.fog.graphics.alpha=alpha;
+			if(cs>1.5){
+				this.fog.graphics.alpha=alpha;
+			} else {
+				this.fog.graphics.alpha=0;
+			}
+			render_engine.setScale(scale);
 		} else {
 			this.light.render.graphics.alpha=0;
 			this.fog.graphics.alpha=0;
+			render_engine.setScale(1.5);
 		}
 
 		this.light.setPosition(position);

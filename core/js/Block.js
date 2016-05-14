@@ -60,7 +60,7 @@ Block = Entity.extend({
 				if(impulse>0.35){
 					if(u.ent.isDigging()){
 						u.ent.diggAnim();
-						this.doDamage(0.8, u.ent);
+						this.doDamage(0.3, u.ent);
 					}
 				}
 				if(impulse > 14){
@@ -72,6 +72,11 @@ Block = Entity.extend({
 		
 	},
 	doDamage: function(amount, who){
+		if(who!=undefined){
+			if(who.damageModifier!=undefined){
+				amount = amount * Math.exp(who.damageModifier);
+			}
+		}
 		var max_x = Config.MAX_CHUNKS_SIZE.X*Config.CHUNK_SIZE-Config.BOUND_SIZE;
 		var min_x = Config.BOUND_SIZE;
 		if(this.pos.x<min_x || this.pos.x>max_x){return false;}
